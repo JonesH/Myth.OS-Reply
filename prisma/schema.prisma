@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  password      String
+  walletAddress String?  // Theta wallet address for payments
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   twitterAccounts TwitterAccount[]
   replyJobs       ReplyJob[]
