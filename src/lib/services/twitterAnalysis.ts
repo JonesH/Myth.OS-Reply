@@ -126,7 +126,7 @@ export class TwitterAnalysisService {
     })
 
     return {
-      topics: [...new Set(topics)], // Remove duplicates
+      topics: Array.from(new Set(topics)), // Remove duplicates
       confidence: topics.length > 0 ? Math.min(topics.length / 3, 1) : 0
     }
   }

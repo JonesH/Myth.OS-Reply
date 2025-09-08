@@ -40,10 +40,8 @@ export function getAIModel(modelId: string) {
     const edgecloud = createEdgeCloudProvider(providerConfig.config)
     return edgecloud(modelId)
   } else {
-    // OpenRouter provider
-    return openrouter(modelId, {
-      apiKey: providerConfig.config.apiKey
-    })
+    // OpenRouter provider - API key is set globally via environment
+    return openrouter(modelId)
   }
 }
 

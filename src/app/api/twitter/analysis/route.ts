@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
             { status: 400 }
           )
         }
-        const sentimentData = await analysisService.getTopicSentiment(topic, timeframe)
+        const sentimentData = await analysisService.getTopicSentiment(topic, timeframe as "day" | "week" | "month")
         return NextResponse.json({
           type: 'sentiment',
           data: {
@@ -120,7 +120,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           type: 'profile',
           data: {
-            username,
             ...profileData,
             mostActiveHours: JSON.parse(profileData.mostActiveHours || '[]'),
             topTopics: JSON.parse(profileData.topTopics || '[]'),

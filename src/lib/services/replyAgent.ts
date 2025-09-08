@@ -117,20 +117,20 @@ export class ReplyAgentService {
           let replyText = job.replyText
 
           // Generate AI reply if enabled
-          if (job.useAI && job.aiConfig) {
+          if (job.useAI) {
             const aiOptions: ReplyGenerationOptions = {
               originalTweet: tweet.text || 'Tweet content not available',
               context: `Replying as ${job.twitterAccount.twitterUsername}`,
-              tone: job.aiConfig.tone,
+              tone: (job.aiTone as any) || 'casual',
               maxLength: 280,
-              includeHashtags: job.aiConfig.includeHashtags,
-              includeEmojis: job.aiConfig.includeEmojis,
-              customInstructions: job.aiConfig.customInstructions
+              includeHashtags: job.aiIncludeHashtags,
+              includeEmojis: job.aiIncludeEmojis,
+              customInstructions: job.aiInstructions || undefined
             }
 
             replyText = await this.openRouterService.generateReply(
               aiOptions, 
-              job.aiConfig.modelId
+              job.aiModelId || 'qwen/qwen-2-7b-instruct:free'
             )
           }
 
@@ -189,15 +189,19 @@ export class ReplyAgentService {
   }
 
   async processAllActiveJobs(): Promise<void> {
-    const activeJobs = await prisma.replyJob.findMany({
+    // Get all active jobs first, then filter in JS since Prisma doesn't support field references easily
+    const allActiveJobs = await prisma.replyJob.findMany({
       where: {
-        isActive: true,
-        currentReplies: { lt: prisma.raw('max_replies') }
+        isActive: true
       },
       include: {
-        twitterAccount: true
+        twitterAccount: true,
+        user: true
       }
     })
+    
+    // Filter jobs that haven't reached max replies
+    const activeJobs = allActiveJobs.filter(job => job.currentReplies < job.maxReplies)
 
     for (const job of activeJobs) {
       try {

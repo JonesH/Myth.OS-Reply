@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Generate targeting strategy using AI
     const strategy = await KeywordGeneratorService.generateTargetingStrategy(prompt);
     
-    let searchResults = [];
+    let searchResults: any[] = [];
     
     // Optionally run the generated searches
     if (generateSearches && strategy.searchQueries.length > 0) {

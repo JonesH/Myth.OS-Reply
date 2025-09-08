@@ -5,12 +5,14 @@ interface TwitterConnectButtonProps {
   callbackUrl?: string;
   className?: string;
   children?: React.ReactNode;
+  onSuccess?: () => void;
 }
 
 export default function TwitterConnectButton({ 
   callbackUrl = "/app", 
   className = "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200",
-  children 
+  children,
+  onSuccess
 }: TwitterConnectButtonProps) {
   const { data: session, status } = useSession();
   

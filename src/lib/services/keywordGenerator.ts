@@ -47,10 +47,15 @@ Guidelines:
 User's target description: "${userPrompt}"`;
 
     try {
-      const response = await OpenRouterService.generateCompletion([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Generate a targeting strategy for: ${userPrompt}` }
-      ]);
+      const openRouterService = new OpenRouterService();
+      // Use the generateReply method with a mock tweet for now
+      const response = await openRouterService.generateReply({
+        originalTweet: `Targeting strategy needed: ${userPrompt}`,
+        context: systemPrompt,
+        tone: 'professional',
+        maxLength: 2000,
+        customInstructions: 'Return only JSON format'
+      }, 'qwen/qwen-2-7b-instruct:free');
 
       console.log('🤖 OpenRouter response:', response);
 
@@ -121,10 +126,14 @@ Target audience: ${targetAudience}
 Tweet: "${tweetText}"`;
 
     try {
-      const response = await OpenRouterService.generateCompletion([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Should I reply to this tweet? Analyze: ${tweetText}` }
-      ]);
+      const openRouterService = new OpenRouterService();
+      const response = await openRouterService.generateReply({
+        originalTweet: tweetText,
+        context: systemPrompt,
+        tone: 'professional',
+        maxLength: 500,
+        customInstructions: 'Return only JSON format with analysis'
+      }, 'qwen/qwen-2-7b-instruct:free');
 
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {

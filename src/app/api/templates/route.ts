@@ -187,8 +187,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Initialize default templates
-export async function initializeDefaultTemplates() {
+// Initialize default templates (not exported from route - will be moved to separate utility)
+async function initializeDefaultTemplates() {
   const defaultTemplates = [
     {
       name: "Supportive Response",
@@ -257,15 +257,20 @@ export async function initializeDefaultTemplates() {
 
   for (const template of defaultTemplates) {
     try {
-      await prisma.replyTemplate.upsert({
-        where: { name: template.name },
-        update: {}, // Don't update existing templates
-        create: {
-          ...template,
-          variables: JSON.stringify(template.variables),
-          symbols: JSON.stringify(template.symbols)
-        }
+      // Check if template exists first, then create if not
+      const existing = await prisma.replyTemplate.findFirst({
+        where: { name: template.name }
       })
+      
+      if (!existing) {
+        await prisma.replyTemplate.create({
+          data: {
+            ...template,
+            variables: JSON.stringify(template.variables),
+            symbols: JSON.stringify(template.symbols)
+          }
+        })
+      }
     } catch (error) {
       console.error(`Failed to create template ${template.name}:`, error)
     }
