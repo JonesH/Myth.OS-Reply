@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/database'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+const getJWTSecret = () => process.env.JWT_SECRET || 'your-secret-key'
 
 export interface AuthUser {
   id: string
@@ -54,7 +54,7 @@ export class AuthService {
     // Generate token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      JWT_SECRET,
+      getJWTSecret(),
       { expiresIn: '7d' }
     )
 
@@ -94,7 +94,7 @@ export class AuthService {
     // Generate token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      JWT_SECRET,
+      getJWTSecret(),
       { expiresIn: '7d' }
     )
 
@@ -110,7 +110,7 @@ export class AuthService {
 
   static async validateToken(token: string): Promise<AuthUser | null> {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any
+      const decoded = jwt.verify(token, getJWTSecret()) as any
       const user = await prisma.user.findUnique({
         where: { id: decoded.userId }
       })
