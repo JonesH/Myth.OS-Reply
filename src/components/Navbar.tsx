@@ -2,14 +2,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import TwitterConnectButton from "@/components/TwitterConnectButton";
-
-interface SubscriptionStatus {
-  plan: string
-  status: string
-  dailyLimit: number
-  repliesUsedToday: number
-  canUpgrade: boolean
-}
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface User {
   id: string
@@ -19,12 +12,13 @@ interface User {
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription();
   
   console.log('🔍 Navbar - User:', user);
   console.log('📍 User ID:', user?.id);
+  console.log('📊 Subscription Status:', subscriptionStatus);
 
   useEffect(() => {
     checkAuth();
@@ -45,7 +39,7 @@ export default function Navbar() {
       if (response.ok) {
         const { user } = await response.json();
         setUser(user);
-        await fetchSubscriptionStatus(token);
+        await refreshSubscriptionStatus();
       } else {
         localStorage.removeItem('token');
         setUser(null);
@@ -59,123 +53,111 @@ export default function Navbar() {
     }
   };
 
-  const fetchSubscriptionStatus = async (token: string) => {
-    try {
-      const response = await fetch('/api/subscriptions/status', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSubscriptionStatus(data);
-      }
-    } catch (error) {
-      console.error('Error fetching subscription status:', error);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
-    setSubscriptionStatus(null);
     window.location.href = '/';
   };
 
   return (
-    <nav className="relative bg-white/70 backdrop-blur-xl border-b border-gray-300/50">
-      <div className="section-container">
-        <div className="flex justify-between items-center h-20">
+    <nav className="bg-white/95 backdrop-blur-md border-b border-gray-200/60 shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="text-2xl font-bold gradient-text group-hover:scale-105 transition-transform duration-200">
+          <Link href="/" className="flex items-center space-x-3 group">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">M</span>
+            </div>
+            <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
               MythosReply
             </div>
           </Link>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
             <Link 
               href="/docs" 
-              className="text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+              className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm"
             >
               Documentation
             </Link>
             <Link 
               href="/waitlist" 
-              className="text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+              className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm"
             >
               Waitlist
             </Link>
             <Link 
               href="/dashboard" 
-              className="text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+              className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm"
             >
               Dashboard
             </Link>
             <Link 
               href="/subscription" 
-              className="text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+              className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm"
             >
               Subscription
             </Link>
-            
-            {/* Authentication Section */}
-            <div className="flex items-center space-x-4">
-              {loading ? (
-                <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
-              ) : user ? (
-                <div className="flex items-center space-x-4">
-                  {/* Subscription Status */}
-                  {subscriptionStatus && (
-                    <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
-                      <span className={`text-xs font-medium capitalize ${
-                        subscriptionStatus.plan === 'free' ? 'text-gray-600' :
-                        subscriptionStatus.plan === 'basic' ? 'text-blue-600' :
-                        'text-purple-600'
-                      }`}>
-                        {subscriptionStatus.plan}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {subscriptionStatus.repliesUsedToday}/{subscriptionStatus.dailyLimit}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <TwitterConnectButton callbackUrl="/dashboard" />
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href="/auth/login"
-                    className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200"
-                  >
-                    Sign In
-                  </Link>
-                  <TwitterConnectButton 
-                    callbackUrl="/dashboard"
-                    className="btn-primary"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                    </svg>
-                    <span>Connect X</span>
-                  </TwitterConnectButton>
-                </div>
-              )}
-            </div>
+          </div>
+
+          {/* Desktop Authentication */}
+          <div className="hidden lg:flex items-center space-x-4">
+            {loading ? (
+              <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+            ) : user ? (
+              <div className="flex items-center space-x-4">
+                {/* Subscription Status Badge */}
+                {subscriptionStatus && (
+                  <div className="flex items-center space-x-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+                    <div className={`w-2 h-2 rounded-full ${
+                      subscriptionStatus.status === 'active' ? 'bg-green-500' : 
+                      subscriptionStatus.status === 'expired' ? 'bg-red-500' : 'bg-yellow-500'
+                    }`}></div>
+                    <span className={`text-xs font-semibold capitalize ${
+                      subscriptionStatus.plan === 'free' ? 'text-gray-600' :
+                      subscriptionStatus.plan === 'basic' ? 'text-blue-600' :
+                      'text-purple-600'
+                    }`}>
+                      {subscriptionStatus.plan}
+                    </span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {subscriptionStatus.repliesUsedToday}/{subscriptionStatus.dailyLimit}
+                    </span>
+                  </div>
+                )}
+                
+                <TwitterConnectButton callbackUrl="/dashboard" />
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 px-3 py-1.5 rounded-md hover:bg-gray-100"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link
+                  href="/auth/login"
+                  className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 px-3 py-1.5 rounded-md hover:bg-gray-100"
+                >
+                  Sign In
+                </Link>
+                <TwitterConnectButton 
+                  callbackUrl="/dashboard"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                >
+                  Connect X
+                </TwitterConnectButton>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="lg:hidden flex items-center">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="p-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 rounded-md hover:bg-gray-100"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
@@ -190,72 +172,80 @@ export default function Navbar() {
 
         {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-300/50">
+          <div className="lg:hidden bg-white/98 backdrop-blur-sm border-t border-gray-200/60 shadow-lg">
             <div className="px-4 py-6 space-y-4">
-              {/* Navigation Links */}
+              {/* Mobile Navigation Links */}
               <div className="space-y-3">
                 <Link 
                   href="/docs" 
-                  className="block text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Documentation
                 </Link>
                 <Link 
                   href="/waitlist" 
-                  className="block text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Waitlist
                 </Link>
                 <Link 
                   href="/dashboard" 
-                  className="block text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <Link 
                   href="/subscription" 
-                  className="block text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Subscription
                 </Link>
               </div>
 
-              {/* Authentication Section */}
-              <div className="pt-4 border-t border-gray-300/50">
+              {/* Mobile Authentication Section */}
+              <div className="pt-4 border-t border-gray-200/60">
                 {loading ? (
                   <div className="animate-pulse bg-gray-200 h-8 w-full rounded"></div>
                 ) : user ? (
                   <div className="space-y-3">
-                    {/* Subscription Status */}
+                    {/* Mobile Subscription Status */}
                     {subscriptionStatus && (
-                      <div className="flex items-center justify-between px-3 py-2 bg-gray-100 rounded-lg">
-                        <span className={`text-sm font-medium capitalize ${
-                          subscriptionStatus.plan === 'free' ? 'text-gray-600' :
-                          subscriptionStatus.plan === 'basic' ? 'text-blue-600' :
-                          'text-purple-600'
-                        }`}>
-                          {subscriptionStatus.plan} Plan
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {subscriptionStatus.repliesUsedToday}/{subscriptionStatus.dailyLimit}
+                      <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            subscriptionStatus.status === 'active' ? 'bg-green-500' : 
+                            subscriptionStatus.status === 'expired' ? 'bg-red-500' : 'bg-yellow-500'
+                          }`}></div>
+                          <span className={`text-sm font-semibold capitalize ${
+                            subscriptionStatus.plan === 'free' ? 'text-gray-600' :
+                            subscriptionStatus.plan === 'basic' ? 'text-blue-600' :
+                            'text-purple-600'
+                          }`}>
+                            {subscriptionStatus.plan} Plan
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 font-medium">
+                          {subscriptionStatus.repliesUsedToday}/{subscriptionStatus.dailyLimit} replies
                         </span>
                       </div>
                     )}
                     
                     <TwitterConnectButton 
                       callbackUrl="/dashboard" 
-                      className="w-full justify-center"
-                    />
+                      className="w-full justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                    >
+                      Connect X
+                    </TwitterConnectButton>
                     <button
                       onClick={() => {
                         handleLogout();
                         setMobileMenuOpen(false);
                       }}
-                      className="block text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center w-full"
+                      className="w-full text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center py-2 px-4 rounded-lg hover:bg-gray-100"
                     >
                       Logout
                     </button>
@@ -264,19 +254,16 @@ export default function Navbar() {
                   <div className="space-y-3">
                     <Link
                       href="/auth/login"
-                      className="block text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center"
+                      className="block text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center py-2 px-4 rounded-lg hover:bg-gray-100"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Sign In
                     </Link>
                     <TwitterConnectButton 
                       callbackUrl="/dashboard"
-                      className="btn-primary w-full justify-center"
+                      className="w-full justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
                     >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                      </svg>
-                      <span>Connect X</span>
+                      Connect X
                     </TwitterConnectButton>
                   </div>
                 )}

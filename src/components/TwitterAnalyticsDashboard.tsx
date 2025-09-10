@@ -51,14 +51,6 @@ export default function TwitterAnalyticsDashboard() {
   const [profileAnalytics, setProfileAnalytics] = useState<ProfileAnalytics | null>(null)
   const [timeframe, setTimeframe] = useState<'day' | 'week' | 'month'>('day')
 
-  useEffect(() => {
-    if (activeTab === 'overview') {
-      loadOverviewData()
-    } else if (activeTab === 'trending') {
-      loadTrendingData()
-    }
-  }, [activeTab, timeframe])
-
   const loadOverviewData = async () => {
     setLoading(true)
     try {
@@ -100,6 +92,14 @@ export default function TwitterAnalyticsDashboard() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      loadOverviewData()
+    } else if (activeTab === 'trending') {
+      loadTrendingData()
+    }
+  }, [activeTab, timeframe])
 
   const loadProfileAnalytics = async (username: string) => {
     if (!username) return

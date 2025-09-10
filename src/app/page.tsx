@@ -24,7 +24,7 @@ export default function Home() {
                 <div className="mb-12">
                   <div className="flex items-center justify-center space-x-6 bg-white/50 backdrop-blur-sm rounded-2xl px-8 py-4 max-w-md mx-auto border border-gray-200">
                     <div className="text-xl font-bold text-gray-700">
-                      Openserv
+                      TFEUL
                     </div>
                     <div className="text-2xl text-gray-400 font-light">×</div>
                     <div className="mythos-logo mythos-logo-small">

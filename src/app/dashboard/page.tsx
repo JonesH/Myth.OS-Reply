@@ -14,6 +14,7 @@ import TwitterMonitoringDashboard from '@/components/TwitterMonitoringDashboard'
 import TwitterProfileTracker from '@/components/TwitterProfileTracker'
 import PremiumGate from '@/components/PremiumGate'
 import UsageStatsWidget from '@/components/UsageStatsWidget'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface TwitterAccount {
   id: string
@@ -49,6 +50,7 @@ export default function Dashboard() {
   const [createJobModalOpen, setCreateJobModalOpen] = useState(false)
   const [aiPlaygroundModalOpen, setAIPlaygroundModalOpen] = useState(false)
   const router = useRouter()
+  const { subscriptionStatus } = useSubscription()
 
   useEffect(() => {
     const checkAuth = async () => {

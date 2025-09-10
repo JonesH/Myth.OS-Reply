@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import QRCode from '@/components/QRCode'
 import TransactionTracker from '@/components/TransactionTracker'
 import WalletIntegration from '@/components/WalletIntegration'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface Plan {
   id: string
@@ -33,6 +34,7 @@ export default function PaymentPlansPage() {
   const [loading, setLoading] = useState(true)
   const [generatingAddress, setGeneratingAddress] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const { refreshSubscriptionStatus } = useSubscription()
 
   useEffect(() => {
     fetchPlans()
@@ -114,6 +116,9 @@ export default function PaymentPlansPage() {
         })
         setSelectedPlan(plan)
         alert(`✅ ${plan.name} plan selected! Payment address generated successfully.`)
+        
+        // Refresh subscription status across the app
+        await refreshSubscriptionStatus()
       } else {
         const error = await response.json()
         console.error('❌ Error response:', error)
