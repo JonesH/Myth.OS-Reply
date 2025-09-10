@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  password      String
+  walletAddress String?  // Theta wallet address for payments
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Subscription fields
+  subscriptionPlan    String   @default("free") // free, basic, premium
+  subscriptionStatus  String   @default("active") // active, expired, cancelled
+  subscriptionExpiresAt DateTime?
+  dailyReplyLimit      Int      @default(10)
+  repliesUsedToday     Int      @default(0)
+  lastUsageReset       DateTime @default(now())
+
+  // Relations
+  twitterAccounts TwitterAccount[]
+  replyJobs       ReplyJob[]
+  replies         Reply[]
+  paymentAddresses PaymentAddress[]
+  usageTracking   UsageTracking[]
+
+  @@map("users")
+}
+
+model TwitterAccount {
+  id              String   @id @default(cuid())
+  userId          String
+  twitterUserId   String   @unique
+  twitterUsername String
+  accessToken     String
+  accessTokenSecret String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replyJobs ReplyJob[]
+
+  @@map("twitter_accounts")
+}
+
+model ReplyJob {
+  id                String            @id @default(cuid())
+  userId            String
+  twitterAccountId  String
+  targetTweetId     String?
+  targetUsername    String?           // Deprecated: use targetUsernames
+  targetUsernames   String?           // JSON string for multiple usernames
+  keywords          String            // JSON string for array storage
+  replyText         String
+  useAI             Boolean           @default(false)
+  aiTone            String?           // professional, casual, humorous, supportive, promotional
+  aiIncludeHashtags Boolean           @default(false)
+  aiIncludeEmojis   Boolean           @default(false)
+  aiInstructions    String?
+  aiModelId         String?
+  isActive          Boolean           @default(true)
+  maxReplies        Int               @default(10)
+  currentReplies    Int               @default(0)
+  lastProcessedAt   DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  twitterAccount TwitterAccount @relation(fields: [twitterAccountId], references: [id], onDelete: Cascade)
+  replies        Reply[]
+
+  @@map("reply_jobs")
+}
+
+model Reply {
+  id           String   @id @default(cuid())
+  replyJobId   String
+  tweetId      String
+  replyTweetId String
+  content      String
+  successful   Boolean  @default(false)
+  errorMessage String?
+  createdAt    DateTime @default(now())
+
+  replyJob ReplyJob @relation(fields: [replyJobId], references: [id], onDelete: Cascade)
+
+  @@map("replies")
+}
+
+model ScrapedTweet {
+  id              String   @id @default(cuid())
+  tweetId         String   @unique
+  content         String
+  authorUsername  String
+  authorDisplayName String?
+  createdAt       DateTime
+  scrapedAt       DateTime @default(now())
+  likes           Int      @default(0)
+  retweets        Int      @default(0)
+  replies         Int      @default(0)
+  hashtags        String?  // JSON string for array storage
+  mentions        String?  // JSON string for array storage
+  sentiment       Float?   // -1 to 1 sentiment score
+  isRetweet       Boolean  @default(false)
+  retweetedTweetId String?
+
+  @@map("scraped_tweets")
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  plan            String   // free, basic, premium
+  status          String   // active, expired, cancelled
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  paymentMethod   String?  // theta, credit_card, etc.
+  transactionHash String?  // Blockchain transaction hash
+  amount          Float?   // Amount paid
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+model UsageTracking {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime @default(now())
+  repliesUsed     Int      @default(0)
+  aiGenerations   Int      @default(0)
+  apiCalls        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("usage_tracking")
+}
+
+model PaymentAddress {
+  id              String   @id @default(cuid())
+  userId          String
+  address         String   @unique
+  plan            String   // basic, premium
+  amount          Float    // Amount in THETA
+  status          String   @default("pending") // pending, paid, expired, cancelled
+  transactionHash String?  // Blockchain transaction hash
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_addresses")
+}
