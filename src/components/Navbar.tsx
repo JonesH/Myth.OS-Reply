@@ -74,6 +74,12 @@ export default function Navbar() {
             >
               Dashboard
             </Link>
+            <Link 
+              href="/subscription" 
+              className="text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+            >
+              Subscription
+            </Link>
             
             {/* Authentication Section */}
             <div className="flex items-center space-x-4">

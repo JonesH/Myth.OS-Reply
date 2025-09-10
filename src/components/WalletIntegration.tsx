@@ -94,6 +94,11 @@ export default function WalletIntegration({ paymentAddress, amount, onTransactio
   }
 
   const switchToThetaTestnet = async () => {
+    if (!window.ethereum) {
+      setError('MetaMask is not installed')
+      return
+    }
+
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
@@ -129,6 +134,11 @@ export default function WalletIntegration({ paymentAddress, amount, onTransactio
   const sendTransaction = async () => {
     if (!wallet.connected) {
       setError('Please connect your wallet first')
+      return
+    }
+
+    if (!window.ethereum) {
+      setError('MetaMask is not installed')
       return
     }
 
