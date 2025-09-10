@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import TwitterConnectButton from "@/components/TwitterConnectButton";
 
@@ -12,25 +11,56 @@ interface SubscriptionStatus {
   canUpgrade: boolean
 }
 
+interface User {
+  id: string
+  email: string
+  username: string
+}
+
 export default function Navbar() {
-  const { data: session } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   
-  console.log('🔍 Navbar - NextAuth session:', session);
-  console.log('📍 User Twitter ID:', session?.user?.twitterId);
+  console.log('🔍 Navbar - User:', user);
+  console.log('📍 User ID:', user?.id);
 
   useEffect(() => {
-    if (session) {
-      fetchSubscriptionStatus();
-    }
-  }, [session]);
+    checkAuth();
+  }, []);
 
-  const fetchSubscriptionStatus = async () => {
+  const checkAuth = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
+      const response = await fetch('/api/auth/validate', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const { user } = await response.json();
+        setUser(user);
+        await fetchSubscriptionStatus(token);
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      localStorage.removeItem('token');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSubscriptionStatus = async (token: string) => {
+    try {
       const response = await fetch('/api/subscriptions/status', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -42,6 +72,13 @@ export default function Navbar() {
     } catch (error) {
       console.error('Error fetching subscription status:', error);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setSubscriptionStatus(null);
+    window.location.href = '/';
   };
 
   return (
@@ -84,7 +121,9 @@ export default function Navbar() {
             
             {/* Authentication Section */}
             <div className="flex items-center space-x-4">
-              {session ? (
+              {loading ? (
+                <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+              ) : user ? (
                 <div className="flex items-center space-x-4">
                   {/* Subscription Status */}
                   {subscriptionStatus && (
@@ -115,6 +154,12 @@ export default function Navbar() {
                   >
                     Subscription
                   </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200"
+                  >
+                    Logout
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center space-x-4">
@@ -193,7 +238,9 @@ export default function Navbar() {
 
               {/* Authentication Section */}
               <div className="pt-4 border-t border-gray-300/50">
-                {session ? (
+                {loading ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-full rounded"></div>
+                ) : user ? (
                   <div className="space-y-3">
                     {/* Subscription Status */}
                     {subscriptionStatus && (
@@ -229,6 +276,15 @@ export default function Navbar() {
                     >
                       Subscription
                     </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="block text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center w-full"
+                    >
+                      Logout
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
