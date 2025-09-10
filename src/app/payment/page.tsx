@@ -113,6 +113,7 @@ export default function PaymentPlansPage() {
           plan: plan.name
         })
         setSelectedPlan(plan)
+        alert(`✅ ${plan.name} plan selected! Payment address generated successfully.`)
       } else {
         const error = await response.json()
         console.error('❌ Error response:', error)
@@ -289,12 +290,20 @@ export default function PaymentPlansPage() {
               className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
                 plan.id === 'free'
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : selectedPlan?.id === plan.id
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
                   : plan.popular
                   ? 'bg-blue-600 hover:bg-blue-700 text-white'
                   : 'bg-gray-600 hover:bg-gray-700 text-white'
               }`}
             >
-              {plan.id === 'free' ? 'Current Plan' : generatingAddress ? 'Generating...' : 'Select Plan'}
+              {plan.id === 'free' 
+                ? 'Current Plan' 
+                : selectedPlan?.id === plan.id 
+                ? 'Selected ✓' 
+                : generatingAddress 
+                ? 'Generating...' 
+                : 'Select Plan'}
             </button>
           </div>
         ))}

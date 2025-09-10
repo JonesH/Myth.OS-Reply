@@ -142,12 +142,6 @@ export default function Navbar() {
                   )}
                   
                   <TwitterConnectButton callbackUrl="/dashboard" />
-                  <Link
-                    href="/dashboard"
-                    className="btn-primary"
-                  >
-                    <span>Dashboard</span>
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200"
@@ -256,13 +250,6 @@ export default function Navbar() {
                       callbackUrl="/dashboard" 
                       className="w-full justify-center"
                     />
-                    <Link
-                      href="/dashboard"
-                      className="btn-primary w-full justify-center"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span>Dashboard</span>
-                    </Link>
                     <button
                       onClick={() => {
                         handleLogout();
