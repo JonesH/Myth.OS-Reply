@@ -2,15 +2,15 @@ import { createHash } from 'crypto'
 import { createPublicClient, http, parseEther, formatEther } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 
-// Theta testnet configuration
+// Theta testnet configuration (TFUEL native currency)
 const THETA_CHAIN = {
   id: 365,
   name: 'Theta Testnet',
   network: 'theta-testnet',
   nativeCurrency: {
     decimals: 18,
-    name: 'Theta',
-    symbol: 'THETA',
+    name: 'TFUEL',
+    symbol: 'TFUEL',
   },
   rpcUrls: {
     default: {
@@ -94,14 +94,31 @@ export class ThetaPaymentService {
    * Get available subscription plans
    */
   static getSubscriptionPlans(): SubscriptionPlan[] {
-    return this.SUBSCRIPTION_PLANS
+    return [...this.SUBSCRIPTION_PLANS]
   }
 
   /**
-   * Get plan by payment amount
+   * Get plan by payment amount (string TFUEL amount, e.g., "1" or "5")
    */
   static getPlanByAmount(amountInTheta: string): SubscriptionPlan | null {
-    return this.SUBSCRIPTION_PLANS.find(plan => plan.priceInTheta === amountInTheta) || null
+    try {
+      // Normalize formatted string to wei and compare exactly
+      const wei = parseEther(amountInTheta)
+      return this.getPlanByAmountWei(wei)
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Get plan by payment amount in wei (BigInt)
+   */
+  static getPlanByAmountWei(amountWei: bigint): SubscriptionPlan | null {
+    const basic = parseEther('1')
+    const premium = parseEther('5')
+    if (amountWei === basic) return this.SUBSCRIPTION_PLANS.find(p => p.id === 'basic') || null
+    if (amountWei === premium) return this.SUBSCRIPTION_PLANS.find(p => p.id === 'premium') || null
+    return null
   }
 
   /**
