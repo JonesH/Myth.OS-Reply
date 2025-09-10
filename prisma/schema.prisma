@@ -28,6 +28,7 @@ model User {
   replyJobs       ReplyJob[]
   subscriptions   Subscription[]
   usageTracking   UsageTracking[]
+  paymentAddresses PaymentAddress[]
 
   @@map("users")
 }
@@ -262,4 +263,20 @@ model UsageTracking {
 
   @@unique([userId, date])
   @@map("usage_tracking")
+}
+
+model PaymentAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  address   String   @unique
+  plan      String   // basic, premium
+  amount    Float    // Amount in THETA
+  status    String   @default("pending") // pending, paid, expired, cancelled
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_addresses")
 }

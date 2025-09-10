@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface SubscriptionStatus {
   plan: string
@@ -209,12 +210,20 @@ export default function SubscriptionDashboard() {
 
           {subscriptionStatus.canUpgrade && (
             <div className="mt-6 pt-6 border-t">
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Upgrade Plan
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Upgrade Plan
+                </button>
+                <Link
+                  href="/payment"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-center"
+                >
+                  Payment Flow
+                </Link>
+              </div>
             </div>
           )}
         </div>
