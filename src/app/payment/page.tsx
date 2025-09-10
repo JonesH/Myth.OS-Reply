@@ -64,23 +64,32 @@ export default function PaymentPlansPage() {
   }
 
   const fetchPlans = async () => {
+    console.log('🔄 Fetching plans...')
     try {
       const response = await fetch('/api/subscriptions/plans')
+      console.log('📡 Plans response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ Plans fetched:', data)
         setPlans(data.plans)
+      } else {
+        console.error('❌ Failed to fetch plans')
       }
     } catch (error) {
-      console.error('Error fetching plans:', error)
+      console.error('❌ Error fetching plans:', error)
     } finally {
       setLoading(false)
     }
   }
 
   const generatePaymentAddress = async (plan: Plan) => {
+    console.log('🔄 Generating payment address for plan:', plan)
     setGeneratingAddress(true)
     try {
       const token = localStorage.getItem('token')
+      console.log('📝 Token exists:', !!token)
+      
       const response = await fetch('/api/payments/address', {
         method: 'POST',
         headers: {
@@ -93,8 +102,11 @@ export default function PaymentPlansPage() {
         })
       })
 
+      console.log('📡 Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ Payment address generated:', data)
         setPaymentAddress({
           address: data.address,
           amount: plan.price,
@@ -103,10 +115,11 @@ export default function PaymentPlansPage() {
         setSelectedPlan(plan)
       } else {
         const error = await response.json()
+        console.error('❌ Error response:', error)
         alert(`Error: ${error.error}`)
       }
     } catch (error) {
-      console.error('Error generating payment address:', error)
+      console.error('❌ Error generating payment address:', error)
       alert('Error generating payment address')
     } finally {
       setGeneratingAddress(false)

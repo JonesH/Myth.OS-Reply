@@ -148,12 +148,6 @@ export default function Navbar() {
                   >
                     <span>Dashboard</span>
                   </Link>
-                  <Link
-                    href="/subscription"
-                    className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200"
-                  >
-                    Subscription
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200"
@@ -268,13 +262,6 @@ export default function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <span>Dashboard</span>
-                    </Link>
-                    <Link
-                      href="/subscription"
-                      className="block text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Subscription
                     </Link>
                     <button
                       onClick={() => {
