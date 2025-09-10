@@ -1,4 +1,4 @@
-import { OpenRouterService } from './openrouter';
+import { AIService } from './ai';
 
 export interface TargetingStrategy {
   keywords: string[];
@@ -47,17 +47,15 @@ Guidelines:
 User's target description: "${userPrompt}"`;
 
     try {
-      const openRouterService = new OpenRouterService();
-      // Use the generateReply method with a mock tweet for now
-      const response = await openRouterService.generateReply({
-        originalTweet: `Targeting strategy needed: ${userPrompt}`,
-        context: systemPrompt,
-        tone: 'professional',
-        maxLength: 2000,
-        customInstructions: 'Return only JSON format'
-      }, 'qwen/qwen-2-7b-instruct:free');
+      const aiService = new AIService();
+      // Use generateCompletion for JSON generation task
+      const response = await aiService.generateCompletion({
+        prompt: systemPrompt,
+        maxTokens: 2000,
+        temperature: 0.7
+      });
 
-      console.log('🤖 OpenRouter response:', response);
+      console.log('🤖 AI response:', response);
 
       // Try to extract JSON from the response
       let jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -126,14 +124,12 @@ Target audience: ${targetAudience}
 Tweet: "${tweetText}"`;
 
     try {
-      const openRouterService = new OpenRouterService();
-      const response = await openRouterService.generateReply({
-        originalTweet: tweetText,
-        context: systemPrompt,
-        tone: 'professional',
-        maxLength: 500,
-        customInstructions: 'Return only JSON format with analysis'
-      }, 'qwen/qwen-2-7b-instruct:free');
+      const aiService = new AIService();
+      const response = await aiService.generateCompletion({
+        prompt: `${systemPrompt}\n\nTweet: "${tweetText}"`,
+        maxTokens: 500,
+        temperature: 0.7
+      });
 
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {

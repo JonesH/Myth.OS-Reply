@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/database'
 import { TwitterService, TwitterCredentials, EnhancedTweet } from './twitter'
-import { OpenRouterService, ReplyGenerationOptions } from './openrouter'
+import { AIService } from './ai'
+import { ReplyGenerationOptions } from './openrouter'
 import { TwitterAnalysisService } from './twitterAnalysis'
 
 export interface ReplyJobConfig {
@@ -25,12 +26,12 @@ export interface ReplyJobConfig {
 
 export class ReplyAgentService {
   private twitterService: TwitterService
-  private openRouterService: OpenRouterService
+  private aiService: AIService
   private analysisService: TwitterAnalysisService
 
   constructor(twitterCredentials: TwitterCredentials) {
     this.twitterService = new TwitterService(twitterCredentials)
-    this.openRouterService = new OpenRouterService()
+    this.aiService = new AIService()
     this.analysisService = new TwitterAnalysisService()
   }
 
@@ -128,9 +129,9 @@ export class ReplyAgentService {
               customInstructions: job.aiInstructions || undefined
             }
 
-            replyText = await this.openRouterService.generateReply(
+            replyText = await this.aiService.generateReply(
               aiOptions, 
-              job.aiModelId || 'qwen/qwen-2-7b-instruct:free'
+              job.aiModelId
             )
           }
 
