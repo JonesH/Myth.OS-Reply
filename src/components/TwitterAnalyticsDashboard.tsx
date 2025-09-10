@@ -51,19 +51,7 @@ export default function TwitterAnalyticsDashboard() {
   const [profileAnalytics, setProfileAnalytics] = useState<ProfileAnalytics | null>(null)
   const [timeframe, setTimeframe] = useState<'day' | 'week' | 'month'>('day')
 
-<<<<<<< HEAD
-  useEffect(() => {
-    if (activeTab === 'overview') {
-      loadOverviewData()
-    } else if (activeTab === 'trending') {
-      loadTrendingData()
-    }
-  }, [activeTab, loadOverviewData, loadTrendingData])
-
   const loadOverviewData = useCallback(async () => {
-=======
-  const loadOverviewData = async () => {
->>>>>>> feature/payment-flow-interface
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -111,7 +99,7 @@ export default function TwitterAnalyticsDashboard() {
     } else if (activeTab === 'trending') {
       loadTrendingData()
     }
-  }, [activeTab, timeframe])
+  }, [activeTab, loadOverviewData, loadTrendingData])
 
   const loadProfileAnalytics = async (username: string) => {
     if (!username) return
