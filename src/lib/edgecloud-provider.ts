@@ -1,15 +1,13 @@
 // EdgeCloud Provider for Vercel AI SDK (LanguageModelV2 interface)
+import { 
+  LanguageModelV2, 
+  LanguageModelV2CallOptions,
+  LanguageModelV2Content,
+  LanguageModelV2FinishReason,
+  LanguageModelV2Usage,
+  LanguageModelV2CallWarning
+} from '@ai-sdk/provider'
 import { EdgeCloudClient } from './edgecloud-client'
-
-// Define the minimal LanguageModelV2 interface we need
-interface LanguageModelV2 {
-  specificationVersion: 'v2'
-  provider: string
-  modelId: string
-  doGenerate: (options: any) => Promise<any>
-  doStream: (options: any) => Promise<any>
-  supportedUrls?: Record<string, RegExp[]>
-}
 
 export interface EdgeCloudProviderConfig {
   apiKey: string
@@ -19,19 +17,26 @@ export function createEdgeCloudProvider(config: EdgeCloudProviderConfig) {
   const client = new EdgeCloudClient({ apiKey: config.apiKey })
   
   return function edgecloudModel(modelId: string): LanguageModelV2 {
-    const doGenerate = async (options: any) => {
+    const doGenerate = async (options: LanguageModelV2CallOptions) => {
         try {
-          // Convert AI SDK prompt to EdgeCloud format
+          // Convert AI SDK messages to EdgeCloud format
+          const opts = options as any // Type assertion until we understand the exact interface
           let userMessage = ''
-          if (typeof options.prompt === 'string') {
-            userMessage = options.prompt
-          } else if (Array.isArray(options.prompt)) {
-            // Handle message array format
-            const lastMessage = options.prompt[options.prompt.length - 1]
+          
+          if (opts.prompt && typeof opts.prompt === 'string') {
+            // Handle string prompt (legacy)
+            userMessage = opts.prompt
+          } else if (opts.messages && Array.isArray(opts.messages)) {
+            // Handle message array format (modern)
+            const lastMessage = opts.messages[opts.messages.length - 1]
             if (lastMessage && 'content' in lastMessage) {
-              userMessage = Array.isArray(lastMessage.content) 
-                ? lastMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join('') 
-                : lastMessage.content
+              if (typeof lastMessage.content === 'string') {
+                userMessage = lastMessage.content
+              } else if (Array.isArray(lastMessage.content)) {
+                userMessage = lastMessage.content
+                  .map((c: any) => c.type === 'text' ? c.text : '')
+                  .join('')
+              }
             }
           }
 
@@ -43,29 +48,29 @@ export function createEdgeCloudProvider(config: EdgeCloudProviderConfig) {
                   content: userMessage
                 }
               ],
-              max_tokens: options.maxTokens || 500,
-              temperature: options.temperature || 0.7,
+              max_tokens: opts.maxOutputTokens || 500,
+              temperature: opts.temperature || 0.7,
               stream: false
             }
           })
           
-          // Convert EdgeCloud response to AI SDK v1 format
+          // Convert EdgeCloud response to AI SDK v2 format
           const content = edgeResponse.choices?.[0]?.message?.content || ''
           
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: content
               }
-            ],
+            ] as LanguageModelV2Content[],
             usage: {
               inputTokens: edgeResponse.usage?.prompt_tokens || 0,
               outputTokens: edgeResponse.usage?.completion_tokens || 0,
               totalTokens: (edgeResponse.usage?.prompt_tokens || 0) + (edgeResponse.usage?.completion_tokens || 0),
-            },
-            finishReason: 'stop',
-            warnings: [],
+            } as LanguageModelV2Usage,
+            finishReason: 'stop' as LanguageModelV2FinishReason,
+            warnings: [] as LanguageModelV2CallWarning[],
             providerMetadata: {
               edgecloud: {
                 model: modelId,
@@ -107,9 +112,7 @@ export function createEdgeCloudProvider(config: EdgeCloudProviderConfig) {
       modelId,
       doGenerate,
       doStream,
-      supportedUrls: {
-        // EdgeCloud doesn't support direct URL access for now
-      }
+      supportedUrls: {}
     }
   }
 }

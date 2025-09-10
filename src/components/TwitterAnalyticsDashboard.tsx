@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   ChartBarIcon, 
   ArrowTrendingUpIcon, 
@@ -57,9 +57,9 @@ export default function TwitterAnalyticsDashboard() {
     } else if (activeTab === 'trending') {
       loadTrendingData()
     }
-  }, [activeTab, timeframe])
+  }, [activeTab, loadOverviewData, loadTrendingData])
 
-  const loadOverviewData = async () => {
+  const loadOverviewData = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -78,9 +78,9 @@ export default function TwitterAnalyticsDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const loadTrendingData = async () => {
+  const loadTrendingData = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -99,7 +99,7 @@ export default function TwitterAnalyticsDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeframe])
 
   const loadProfileAnalytics = async (username: string) => {
     if (!username) return

@@ -1,6 +1,51 @@
 // Test AIService abstraction with provider switching
-import { describe, test, expect } from '@jest/globals'
+import { describe, test, expect, jest } from '@jest/globals'
 import { AIService } from '@/lib/services/ai'
+
+// Mock the AI provider factory
+jest.mock('@/lib/ai-provider-factory', () => ({
+  createAIProvider: jest.fn().mockReturnValue({
+    type: 'openrouter',
+    config: { apiKey: 'test-api-key' }
+  }),
+  getAIModel: jest.fn().mockReturnValue({
+    specificationVersion: 'v2',
+    provider: 'openrouter',
+    modelId: 'test-model'
+  }),
+  FREE_MODELS: {
+    openrouter: {
+      qwen: 'qwen/qwen-2-7b-instruct:free',
+      gemma: 'google/gemma-2-9b-it:free',
+      phi: 'microsoft/phi-3-mini-128k-instruct:free'
+    },
+    edgecloud: {
+      llama3: 'llama_3_1_70b',
+      deepseek: 'deepseek_r1'
+    }
+  }
+}))
+
+// Mock the OpenRouter service
+jest.mock('@/lib/services/openrouter', () => ({
+  OpenRouterService: class MockOpenRouterService {
+    generateReply = jest.fn().mockResolvedValue('Test reply')
+    
+    static getAvailableModels = jest.fn().mockReturnValue([
+      {
+        id: 'qwen/qwen-2-7b-instruct:free',
+        name: 'Qwen 2 7B',
+        description: 'Test model',
+        pricing: { prompt: 0, completion: 0 }
+      }
+    ])
+  }
+}))
+
+// Mock the AI SDK
+jest.mock('ai', () => ({
+  generateText: jest.fn().mockResolvedValue({ text: 'Test completion' })
+}))
 
 describe('AIService', () => {
   test('creates AIService instance', () => {

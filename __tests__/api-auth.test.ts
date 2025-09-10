@@ -270,7 +270,14 @@ describe('Authentication API Routes', () => {
 
       const request = new NextRequest('http://localhost:3000/api/auth/validate', {
         method: 'GET',
-        headers: { Authorization: `Bearer ${mockToken}` },
+      })
+      
+      // Mock the headers.get method to return our token
+      jest.spyOn(request.headers, 'get').mockImplementation((headerName: string) => {
+        if (headerName.toLowerCase() === 'authorization') {
+          return `Bearer ${mockToken}`
+        }
+        return null
       })
 
       const response = await validateGET(request)
@@ -304,7 +311,14 @@ describe('Authentication API Routes', () => {
 
       const request = new NextRequest('http://localhost:3000/api/auth/validate', {
         method: 'GET',
-        headers: { Authorization: 'Bearer invalid-token' },
+      })
+      
+      // Mock the headers.get method to return invalid token
+      jest.spyOn(request.headers, 'get').mockImplementation((headerName: string) => {
+        if (headerName.toLowerCase() === 'authorization') {
+          return 'Bearer invalid-token'
+        }
+        return null
       })
 
       const response = await validateGET(request)
@@ -323,7 +337,14 @@ describe('Authentication API Routes', () => {
 
       const request = new NextRequest('http://localhost:3000/api/auth/validate', {
         method: 'GET',
-        headers: { Authorization: `Bearer ${mockToken}` },
+      })
+      
+      // Mock the headers.get method to return our token
+      jest.spyOn(request.headers, 'get').mockImplementation((headerName: string) => {
+        if (headerName.toLowerCase() === 'authorization') {
+          return `Bearer ${mockToken}`
+        }
+        return null
       })
 
       const response = await validateGET(request)

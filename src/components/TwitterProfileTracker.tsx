@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { 
   PlusIcon,
   TrashIcon,
@@ -123,7 +124,7 @@ export default function TwitterProfileTracker() {
       // For now, we'll just show a notification that filters changed
       // In a production app, you might want to automatically refresh
     }
-  }, [dateRange, customStartDate, customEndDate])
+  }, [dateRange, customStartDate, customEndDate, selectedProfile, profileTweets.length])
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message })
@@ -786,13 +787,16 @@ export default function TwitterProfileTracker() {
                 <div key={tweet.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center">
-                      <img 
-                        src={tweet.author.profilePicture} 
+                      <Image
+                        src={tweet.author.profilePicture}
                         alt={`@${tweet.author.userName}`}
+                        width={40}
+                        height={40}
+                        unoptimized
                         className="w-10 h-10 rounded-full mr-3"
                         onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
                         }}
                       />
                       <div>
@@ -905,13 +909,16 @@ export default function TwitterProfileTracker() {
                 <div key={`${tweet.profileSource}-${tweet.id}`} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center">
-                      <img 
-                        src={tweet.author.profilePicture} 
+                      <Image
+                        src={tweet.author.profilePicture}
                         alt={`@${tweet.author.userName}`}
+                        width={40}
+                        height={40}
+                        unoptimized
                         className="w-10 h-10 rounded-full mr-3"
                         onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
                         }}
                       />
                       <div>

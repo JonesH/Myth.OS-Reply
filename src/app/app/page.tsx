@@ -2,6 +2,7 @@
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import TwitterConnectButton from "@/components/TwitterConnectButton";
+import Image from "next/image";
 import TwitterProfileTracker from "@/components/TwitterProfileTracker";
 
 export default function AppPage() {
@@ -296,9 +297,12 @@ export default function AppPage() {
                 {analysisResults.tweets?.slice(0, 8).map((tweet: any, idx: number) => (
                   <div key={idx} className="border border-gray-200 hover:border-blue-300 rounded-lg p-4 transition-colors">
                     <div className="flex items-start space-x-3">
-                      <img 
-                        src={tweet.author.profilePicture} 
+                      <Image
+                        src={tweet.author.profilePicture}
                         alt={tweet.author.name}
+                        width={48}
+                        height={48}
+                        unoptimized
                         className="w-12 h-12 rounded-full flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">

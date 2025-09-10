@@ -62,26 +62,26 @@ export default function ReplyTemplateSelector({
   const [previewValues, setPreviewValues] = useState<Record<string, string>>({})
 
   useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const params = new URLSearchParams()
+        if (tone) params.append('tone', tone)
+        if (category) params.append('category', category)
+
+        const response = await fetch(`/api/templates?${params.toString()}`)
+        if (response.ok) {
+          const data = await response.json()
+          setTemplates(data)
+        }
+      } catch (error) {
+        console.error('Failed to load templates:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     loadTemplates()
   }, [tone, category])
-
-  const loadTemplates = async () => {
-    try {
-      const params = new URLSearchParams()
-      if (tone) params.append('tone', tone)
-      if (category) params.append('category', category)
-
-      const response = await fetch(`/api/templates?${params.toString()}`)
-      if (response.ok) {
-        const data = await response.json()
-        setTemplates(data)
-      }
-    } catch (error) {
-      console.error('Failed to load templates:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleTemplateToggle = (templateId: string) => {
     const newSelection = selectedTemplates.includes(templateId)
