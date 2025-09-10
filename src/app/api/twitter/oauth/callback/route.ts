@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TwitterOAuthService } from '@/lib/services/twitterOAuth'
 import { prisma } from '@/lib/database'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * OAuth callback handler for Twitter authentication
  * This endpoint is called by Twitter after user authorization
