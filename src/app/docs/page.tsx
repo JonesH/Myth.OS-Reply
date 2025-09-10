@@ -75,7 +75,7 @@ export default function DocsPage() {
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <h2 className="text-lg font-semibold text-green-800 mb-2">🤖 AI Features</h2>
           <div className="text-green-700 space-y-2">
-            <p>• Generate intelligent replies using free OpenRouter AI models</p>
+            <p>• Generate intelligent replies using AI provider models</p>
             <p>• Choose from multiple tones: professional, casual, humorous, supportive, promotional</p>
             <p>• Customize with hashtags, emojis, and custom instructions</p>
             <p>• Models available: Gemma 2, Phi-3 Mini, Qwen 2 - all completely free!</p>

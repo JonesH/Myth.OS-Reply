@@ -337,7 +337,7 @@ export default function CreateReplyJobModal({ isOpen, onClose, onSuccess }: Crea
                 className="mr-2"
               />
               <span className="text-sm font-medium text-gray-700">
-                Use AI-powered replies (Free OpenRouter models)
+                Use AI-powered replies (AI provider models)
               </span>
             </label>
 

@@ -118,7 +118,7 @@ const options = {
       },
       {
         name: 'AI Reply Generation',
-        description: 'Generate AI-powered tweet replies using OpenRouter models'
+        description: 'Generate AI-powered tweet replies using AI provider models'
       },
       {
         name: 'AI Models',
