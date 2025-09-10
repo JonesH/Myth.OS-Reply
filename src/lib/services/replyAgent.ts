@@ -131,7 +131,7 @@ export class ReplyAgentService {
 
             replyText = await this.aiService.generateReply(
               aiOptions, 
-              job.aiModelId
+              job.aiModelId || undefined
             )
           }
 

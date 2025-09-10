@@ -40,9 +40,8 @@ export class AIService {
       const model = getAIModel(modelId)
       
       const response = await generateText({
-        model,
+        model: model as any,
         prompt: options.prompt,
-        maxOutputTokens: options.maxTokens || 500,
         temperature: options.temperature || 0.7
       })
       
@@ -84,12 +83,20 @@ export class AIService {
           id: FREE_MODELS.edgecloud.llama3,
           name: 'Llama 3.1 70B',
           description: 'Advanced language model optimized for conversation',
+<<<<<<< HEAD
+=======
+          // contextLength: 8192,
+>>>>>>> feature/payment-flow-interface
           pricing: { prompt: 0, completion: 0 }
         },
         {
           id: FREE_MODELS.edgecloud.deepseek,
           name: 'DeepSeek R1',
           description: 'High-performance reasoning model',
+<<<<<<< HEAD
+=======
+          // contextLength: 8192,
+>>>>>>> feature/payment-flow-interface
           pricing: { prompt: 0, completion: 0 }
         }
       ]
@@ -145,9 +152,8 @@ export class AIService {
     const prompt = this.buildPrompt(options)
     
     const response = await generateText({
-      model,
+      model: model as any,
       prompt,
-      maxTokens: 500,
       temperature: 0.7
     })
     

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { AIService } from '@/lib/services/ai'
 import { ReplyGenerationOptions } from '@/lib/services/openrouter'
+import { UsageTrackingService } from '@/lib/services/usageTracking'
 
 /**
  * @swagger
@@ -91,7 +92,7 @@ async function generateReplyWithProvider(options: ReplyGenerationOptions, modelI
 
 export async function POST(request: NextRequest) {
   try {
-    await getAuthUser(request) // Verify authentication
+    const user = await getAuthUser(request) // Verify authentication
     
     const body = await request.json()
     const { 
@@ -118,6 +119,32 @@ export async function POST(request: NextRequest) {
         { error: 'Count must be between 1 and 5' },
         { status: 400 }
       )
+    }
+
+    // Check usage limits before generating replies
+    const usageLimit = await UsageTrackingService.checkUsageLimit(user.id, 'reply')
+    
+    if (!usageLimit.canUseFeature) {
+      return NextResponse.json(
+        { 
+          error: 'Daily usage limit exceeded',
+          remainingUsage: usageLimit.remainingUsage,
+          dailyLimit: usageLimit.dailyLimit,
+          resetTime: usageLimit.resetTime
+        },
+        { status: 429 }
+      )
+    }
+
+    // Check if user has access to custom instructions (premium feature)
+    if (customInstructions) {
+      const hasCustomAccess = await UsageTrackingService.hasPremiumAccess(user.id, 'custom_instructions')
+      if (!hasCustomAccess) {
+        return NextResponse.json(
+          { error: 'Custom instructions require Premium plan' },
+          { status: 403 }
+        )
+      }
     }
 
     const options: ReplyGenerationOptions = {
@@ -148,11 +175,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Increment usage count for each reply generated
+    for (let i = 0; i < count; i++) {
+      await UsageTrackingService.incrementUsage(user.id, 'reply')
+    }
+
     return NextResponse.json({
       replies,
       modelUsed: selectedModel,
       provider: aiService.getProviderType(),
-      charactersUsed: replies.map(reply => reply.length)
+      charactersUsed: replies.map(reply => reply.length),
+      remainingUsage: usageLimit.remainingUsage - count,
+      dailyLimit: usageLimit.dailyLimit
     })
 
   } catch (error: any) {
