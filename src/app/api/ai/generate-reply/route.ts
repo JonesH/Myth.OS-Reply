@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { OpenRouterService, ReplyGenerationOptions } from '@/lib/services/openrouter'
+import { getAIModel, createAIProvider, FREE_MODELS } from '@/lib/ai-provider-factory'
 
 /**
  * @swagger
@@ -82,6 +83,54 @@ async function getAuthUser(request: NextRequest) {
   return await AuthService.getUserFromToken(token)
 }
 
+async function generateReplyWithProvider(options: ReplyGenerationOptions, modelId: string): Promise<string> {
+  const providerConfig = createAIProvider()
+  
+  if (providerConfig.type === 'edgecloud') {
+    // Use EdgeCloud via AI SDK generateText
+    const { generateText } = require('ai')
+    const model = getAIModel(modelId)
+    
+    const prompt = buildPrompt(options)
+    const response = await generateText({
+      model,
+      prompt,
+      maxTokens: 500,
+      temperature: 0.7
+    })
+    
+    return response.text
+  } else {
+    // Fallback to existing OpenRouter service
+    const openRouterService = new OpenRouterService()
+    return await openRouterService.generateReply(options, modelId)
+  }
+}
+
+function buildPrompt(options: ReplyGenerationOptions): string {
+  const { originalTweet, context, tone, maxLength, includeHashtags, includeEmojis, customInstructions } = options
+  
+  let prompt = `Generate a reply to this tweet: "${originalTweet}"\n\n`
+  
+  if (context) {
+    prompt += `Context: ${context}\n\n`
+  }
+  
+  prompt += `Requirements:\n`
+  prompt += `- Tone: ${tone || 'casual'}\n`
+  prompt += `- Maximum length: ${maxLength || 280} characters\n`
+  prompt += `- Include hashtags: ${includeHashtags ? 'yes' : 'no'}\n`
+  prompt += `- Include emojis: ${includeEmojis ? 'yes' : 'no'}\n`
+  
+  if (customInstructions) {
+    prompt += `- Custom instructions: ${customInstructions}\n`
+  }
+  
+  prompt += `\nReply:`
+  
+  return prompt
+}
+
 export async function POST(request: NextRequest) {
   try {
     await getAuthUser(request) // Verify authentication
@@ -113,8 +162,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const openRouterService = new OpenRouterService()
-    
     const options: ReplyGenerationOptions = {
       originalTweet,
       context,
@@ -125,19 +172,36 @@ export async function POST(request: NextRequest) {
       customInstructions
     }
 
+    // Determine model based on provider type
+    const providerConfig = createAIProvider()
+    let selectedModel: string
+    
+    if (modelId) {
+      selectedModel = modelId
+    } else if (providerConfig.type === 'edgecloud') {
+      selectedModel = FREE_MODELS.edgecloud.llama3
+    } else {
+      selectedModel = OpenRouterService.FREE_MODELS[0].id
+    }
+
     let replies: string[]
-    const selectedModel = modelId || OpenRouterService.FREE_MODELS[0].id
 
     if (count === 1) {
-      const reply = await openRouterService.generateReply(options, selectedModel)
+      const reply = await generateReplyWithProvider(options, selectedModel)
       replies = [reply]
     } else {
-      replies = await openRouterService.generateMultipleReplies(options, count, selectedModel)
+      // For multiple replies, generate them sequentially
+      replies = []
+      for (let i = 0; i < count; i++) {
+        const reply = await generateReplyWithProvider(options, selectedModel)
+        replies.push(reply)
+      }
     }
 
     return NextResponse.json({
       replies,
       modelUsed: selectedModel,
+      provider: providerConfig.type,
       charactersUsed: replies.map(reply => reply.length)
     })
 

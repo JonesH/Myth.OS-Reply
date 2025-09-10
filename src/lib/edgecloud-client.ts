@@ -1,24 +1,41 @@
 // EdgeCloud HTTP Client Implementation
-export interface EdgeCloudResponse {
-  output: string
-  job_id: string
-  latency_ms: number
-  cost_milli: number
+export interface EdgeCloudMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
 }
 
 export interface EdgeCloudRequest {
-  prompt: string
-  model?: string
-  max_tokens?: number
-  temperature?: number
+  input: {
+    messages: EdgeCloudMessage[]
+    max_tokens?: number
+    temperature?: number
+    top_p?: number
+    stream?: boolean
+  }
+}
+
+export interface EdgeCloudResponse {
+  choices: Array<{
+    message: {
+      content: string
+      role: string
+    }
+    finish_reason: string
+  }>
+  usage?: {
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+  }
 }
 
 export class EdgeCloudClient {
-  private baseUrl = 'https://api.thetaedgecloud.com'
+  private baseUrl = 'https://ondemand.thetaedgecloud.com'
   
   constructor(private config: { apiKey: string }) {}
   
-  async makeRequest(endpoint: string, data: EdgeCloudRequest): Promise<EdgeCloudResponse> {
+  async makeRequest(modelName: string, data: EdgeCloudRequest): Promise<EdgeCloudResponse> {
+    const endpoint = `/infer_request/${modelName}/completions`
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {

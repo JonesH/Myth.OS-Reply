@@ -53,7 +53,7 @@ export const FREE_MODELS = {
     phi: 'microsoft/phi-3-mini-128k-instruct:free'
   },
   edgecloud: {
-    llama3: 'llama-3-70b-instruct',
-    llama2: 'llama-2-70b-chat'
+    llama3: 'llama_3_1_70b',
+    deepseek: 'deepseek_r1'
   }
 } as const
