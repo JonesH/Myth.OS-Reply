@@ -1,13 +1,47 @@
 "use client";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import TwitterConnectButton from "@/components/TwitterConnectButton";
+
+interface SubscriptionStatus {
+  plan: string
+  status: string
+  dailyLimit: number
+  repliesUsedToday: number
+  canUpgrade: boolean
+}
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   
   console.log('🔍 Navbar - NextAuth session:', session);
   console.log('📍 User Twitter ID:', session?.user?.twitterId);
+
+  useEffect(() => {
+    if (session) {
+      fetchSubscriptionStatus();
+    }
+  }, [session]);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/subscriptions/status', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
+    }
+  };
 
   return (
     <nav className="relative bg-white/70 backdrop-blur-xl border-b border-gray-300/50">
@@ -45,12 +79,34 @@ export default function Navbar() {
             <div className="flex items-center space-x-4">
               {session ? (
                 <div className="flex items-center space-x-4">
+                  {/* Subscription Status */}
+                  {subscriptionStatus && (
+                    <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
+                      <span className={`text-xs font-medium capitalize ${
+                        subscriptionStatus.plan === 'free' ? 'text-gray-600' :
+                        subscriptionStatus.plan === 'basic' ? 'text-blue-600' :
+                        'text-purple-600'
+                      }`}>
+                        {subscriptionStatus.plan}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {subscriptionStatus.repliesUsedToday}/{subscriptionStatus.dailyLimit}
+                      </span>
+                    </div>
+                  )}
+                  
                   <TwitterConnectButton callbackUrl="/dashboard" />
                   <Link
                     href="/dashboard"
                     className="btn-primary"
                   >
                     <span>Dashboard</span>
+                  </Link>
+                  <Link
+                    href="/subscription"
+                    className="text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200"
+                  >
+                    Subscription
                   </Link>
                 </div>
               ) : (

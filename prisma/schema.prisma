@@ -16,8 +16,18 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // Subscription fields
+  subscriptionPlan    String   @default("free") // free, basic, premium
+  subscriptionStatus  String   @default("active") // active, expired, cancelled
+  subscriptionExpiresAt DateTime?
+  dailyReplyLimit     Int      @default(10) // Current daily limit based on plan
+  repliesUsedToday    Int      @default(0) // Replies used today
+  lastUsageReset      DateTime @default(now()) // Last time usage was reset
+
   twitterAccounts TwitterAccount[]
   replyJobs       ReplyJob[]
+  subscriptions   Subscription[]
+  usageTracking   UsageTracking[]
 
   @@map("users")
 }
@@ -218,4 +228,38 @@ model ReplyTemplate {
   updatedAt   DateTime @updatedAt
   
   @@map("reply_templates")
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String
+  plan              String   // free, basic, premium
+  status            String   // active, expired, cancelled
+  amount            Float    // Amount in THETA
+  transactionHash   String?  // Theta blockchain transaction hash
+  paymentMethod     String   @default("theta") // theta, credit_card, etc.
+  startDate         DateTime @default(now())
+  endDate           DateTime?
+  autoRenew         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model UsageTracking {
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime @default(now())
+  repliesUsed   Int      @default(0)
+  aiGenerations Int      @default(0)
+  featuresUsed  String?  // JSON array of premium features used
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("usage_tracking")
 }

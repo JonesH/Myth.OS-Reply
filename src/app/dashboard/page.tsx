@@ -11,6 +11,8 @@ import MultipleProfileDemo from '@/components/MultipleProfileDemo'
 import TwitterAnalyticsDashboard from '@/components/TwitterAnalyticsDashboard'
 import TwitterMonitoringDashboard from '@/components/TwitterMonitoringDashboard'
 import TwitterProfileTracker from '@/components/TwitterProfileTracker'
+import PremiumGate from '@/components/PremiumGate'
+import UsageStatsWidget from '@/components/UsageStatsWidget'
 
 interface TwitterAccount {
   id: string
@@ -244,6 +246,11 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Usage Statistics */}
+        <div className="mb-8">
+          <UsageStatsWidget />
+        </div>
+
         {/* Multiple Profile Demo */}
         <div className="mb-8">
           <MultipleProfileDemo />
@@ -251,7 +258,9 @@ export default function Dashboard() {
 
         {/* App-Only Monitoring Dashboard */}
         <div className="mb-8">
-          <TwitterMonitoringDashboard />
+          <PremiumGate feature="monitoring" requiredPlan="basic">
+            <TwitterMonitoringDashboard />
+          </PremiumGate>
         </div>
 
         {/* Profile Tracker Dashboard */}
@@ -276,12 +285,14 @@ export default function Dashboard() {
               >
                 Create Reply Job
               </button>
-              <button
-                onClick={() => setAIPlaygroundModalOpen(true)}
-                className="bg-primary-400 hover:bg-primary-500 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-200"
-              >
-                AI Playground
-              </button>
+              <PremiumGate feature="ai_playground" requiredPlan="basic">
+                <button
+                  onClick={() => setAIPlaygroundModalOpen(true)}
+                  className="bg-primary-400 hover:bg-primary-500 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-200"
+                >
+                  AI Playground
+                </button>
+              </PremiumGate>
             </div>
           </div>
         </div>
@@ -318,7 +329,9 @@ export default function Dashboard() {
 
         {/* Twitter Analytics Dashboard */}
         <div className="mb-8">
-          <TwitterAnalyticsDashboard />
+          <PremiumGate feature="analytics" requiredPlan="basic">
+            <TwitterAnalyticsDashboard />
+          </PremiumGate>
         </div>
 
         {/* Recent Reply Jobs */}
