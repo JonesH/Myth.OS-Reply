@@ -35,6 +35,7 @@ A sophisticated Twitter reply automation system built with Next.js and TypeScrip
 - **Authentication**: JWT-based auth system
 - **Twitter API**: OAuth 1.0a integration
 - **Documentation**: Swagger/OpenAPI 3.0
+- **Payments (Beta)**: TFUEL payments on Theta EVM testnet
 
 ## 📋 Prerequisites
 
@@ -81,6 +82,11 @@ A sophisticated Twitter reply automation system built with Next.js and TypeScrip
    # OpenRouter Configuration
    OPENROUTER_API_KEY=your_openrouter_api_key
    OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+
+   # Theta EVM Testnet (TFUEL payments)
+   THETA_TESTNET_RPC_URL=https://eth-rpc-api-testnet.thetatoken.org/rpc
+   THETA_MASTER_SEED=0xYOUR_MASTER_SEED_64_HEX
+   NEXT_PUBLIC_THETA_CHAIN_ID=365
    ```
 
 4. **Set up the database**
@@ -223,3 +229,16 @@ For support and questions:
 **Note**: This application uses free AI models via OpenRouter and respects Twitter's API terms of service. Always ensure compliance with platform policies when using automation tools.
 
 For the latest information about free models available on OpenRouter, visit: [https://openrouter.ai/models?fmt=table&q=free](https://openrouter.ai/models?fmt=table&q=free)
+## 💸 Payments (TFUEL on Theta EVM Testnet)
+
+The app supports simple payments using TFUEL, the native currency of Theta EVM testnet. No smart contracts are required — we verify native transfers to a per‑user deposit address.
+
+- Get your deposit address: `GET /api/payments/address` (Bearer JWT)
+- See plans: `GET /api/payments/plans` (1 TFUEL = Basic 30d, 5 TFUEL = Premium 30d)
+- Send TFUEL to your address from a testnet wallet (you need TFUEL for gas)
+- Verify a payment: `POST /api/payments/verify` with `{ txHash }`
+- Check status: `GET /api/payments/status`
+
+Environment:
+- RPC: `https://eth-rpc-api-testnet.thetatoken.org/rpc`
+- Chain ID: `365`
