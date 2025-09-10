@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
-import { OpenRouterService } from '@/lib/services/openrouter'
+import { AIService } from '@/lib/services/ai'
 
 /**
  * @swagger
@@ -52,12 +52,13 @@ export async function GET(request: NextRequest) {
   try {
     await getAuthUser(request) // Verify authentication
 
-    const models = OpenRouterService.getAvailableModels()
+    const aiService = new AIService()
+    const models = aiService.getAvailableModels()
     
     return NextResponse.json({
       models,
       count: models.length,
-      note: 'All listed models are free to use via OpenRouter'
+      note: `Models available via ${aiService.getProviderType() === 'edgecloud' ? 'EdgeCloud' : 'OpenRouter'} provider`
     })
 
   } catch (error: any) {
