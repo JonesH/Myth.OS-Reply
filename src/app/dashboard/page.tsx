@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'react-hot-toast'
+import Navbar from '@/components/Navbar'
 import TwitterAccountModal from '@/components/TwitterAccountModal'
 import CreateReplyJobModal from '@/components/CreateReplyJobModal'
 import AIPlaygroundModal from '@/components/AIPlaygroundModal'
@@ -140,37 +141,29 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-hero-gradient">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow border-b border-gray-300/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <div className="pixel-cat" style={{transform: 'scale(0.8)'}}></div>
-              <div className="mythos-logo">
-                <span className="mythos-logo-text">myth.os</span>
-                <div className="mythos-logo-icon"></div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-600">Welcome, {user?.username}!</span>
-              <Link
-                href="/docs"
-                className="text-primary-600 hover:text-primary-700 font-medium"
-              >
-                API Docs
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="btn-secondary"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome back, {user?.username}! 👋
+              </h1>
+              <p className="text-gray-600">
+                Manage your Twitter automation and track your progress
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="btn-secondary"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="card">

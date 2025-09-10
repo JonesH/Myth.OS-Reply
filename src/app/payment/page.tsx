@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Navbar from '@/components/Navbar'
 import QRCode from '@/components/QRCode'
 import TransactionTracker from '@/components/TransactionTracker'
 import WalletIntegration from '@/components/WalletIntegration'
@@ -139,7 +140,10 @@ export default function PaymentPlansPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-screen bg-hero-gradient">
+      <Navbar />
+      
+      <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8 text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Plan</h1>
         <p className="text-xl text-gray-600">Select the perfect plan for your Twitter automation needs</p>
@@ -378,6 +382,7 @@ export default function PaymentPlansPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

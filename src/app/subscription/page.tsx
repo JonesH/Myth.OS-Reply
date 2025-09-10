@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Navbar from '@/components/Navbar'
 
 export default function SimpleSubscriptionPage() {
   const router = useRouter()
@@ -47,7 +48,10 @@ export default function SimpleSubscriptionPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="min-h-screen bg-hero-gradient">
+      <Navbar />
+      
+      <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Subscription Management</h1>
         <p className="text-gray-600">Manage your subscription plan and view usage statistics</p>
@@ -104,6 +108,7 @@ export default function SimpleSubscriptionPage() {
         >
           View Payment Options
         </a>
+      </div>
       </div>
     </div>
   )
