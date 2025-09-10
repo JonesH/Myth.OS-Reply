@@ -48,12 +48,13 @@ export async function GET(request: NextRequest) {
         currency: 'THETA',
         dailyLimit: 10,
         features: [
-          '10 AI replies per day',
-          'Basic AI models',
-          'Limited automation',
+          '10 AI replies per day limit',
+          'Basic AI models only',
+          'Limited automation features',
           'Basic analytics'
         ],
-        popular: false
+        popular: false,
+        description: 'Perfect for trying out our service'
       },
       {
         id: 'basic',
@@ -68,7 +69,8 @@ export async function GET(request: NextRequest) {
           'Standard analytics',
           'Email support'
         ],
-        popular: true
+        popular: true,
+        description: 'Most popular choice for regular users'
       },
       {
         id: 'premium',
@@ -80,11 +82,12 @@ export async function GET(request: NextRequest) {
           '500 AI replies per day',
           'Advanced AI models',
           'Custom AI instructions',
-          'Advanced analytics',
-          'Priority support',
+          'Advanced analytics and insights',
+          'Priority support features',
           'Custom integrations'
         ],
-        popular: false
+        popular: false,
+        description: 'For power users and businesses'
       }
     ]
 

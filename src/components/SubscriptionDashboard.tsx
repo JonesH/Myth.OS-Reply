@@ -208,24 +208,30 @@ export default function SubscriptionDashboard() {
             </div>
           </div>
 
-          {subscriptionStatus.canUpgrade && (
-            <div className="mt-6 pt-6 border-t">
-              <div className="flex space-x-3">
+          <div className="mt-6 pt-6 border-t">
+            <div className="flex flex-wrap gap-3">
+              {subscriptionStatus.canUpgrade && (
                 <button
                   onClick={() => setShowUpgradeModal(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Upgrade Plan
                 </button>
-                <Link
-                  href="/payment"
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-center"
-                >
-                  Payment Flow
-                </Link>
-              </div>
+              )}
+              <Link
+                href="/payment"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-center"
+              >
+                Payment Flow
+              </Link>
+              <Link
+                href="/subscription"
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-center"
+              >
+                Manage Subscription
+              </Link>
             </div>
-          )}
+          </div>
         </div>
       )}
 
