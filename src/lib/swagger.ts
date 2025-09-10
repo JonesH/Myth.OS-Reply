@@ -127,6 +127,14 @@ const options = {
       {
         name: 'Twitter OAuth',
         description: 'Twitter OAuth authentication flow'
+      },
+      {
+        name: 'Payments',
+        description: 'Subscription plans and payment management'
+      },
+      {
+        name: 'Blockchain',
+        description: 'Theta blockchain integration for payments and verification'
       }
     ]
   },

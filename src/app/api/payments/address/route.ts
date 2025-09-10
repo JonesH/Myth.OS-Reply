@@ -4,6 +4,63 @@ import { ThetaPaymentService } from '@/lib/services/theta'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * @swagger
+ * /api/payments/address:
+ *   get:
+ *     summary: Generate payment address for user
+ *     description: Creates a deterministic Theta blockchain payment address for the authenticated user to receive TFUEL payments for subscription activation
+ *     tags: [Payments, Blockchain]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Payment address generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 paymentAddress:
+ *                   type: string
+ *                   description: Ethereum-compatible address on Theta network
+ *                   example: "0x1234567890123456789012345678901234567890"
+ *                 userId:
+ *                   type: string
+ *                   description: User ID
+ *                 chainId:
+ *                   type: string
+ *                   description: Theta testnet chain ID
+ *                   example: "365"
+ *                 currency:
+ *                   type: string
+ *                   description: Payment currency
+ *                   example: "TFUEL"
+ *                 instructions:
+ *                   type: string
+ *                   description: Payment instructions for user
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No token provided"
+ *       500:
+ *         description: Server error generating payment address
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to generate payment address"
+ */
+
 export async function GET(request: NextRequest) {
   try {
     // Get user from auth token
@@ -32,8 +89,8 @@ export async function GET(request: NextRequest) {
       paymentAddress,
       userId: user.id,
       chainId: process.env.NEXT_PUBLIC_THETA_CHAIN_ID,
-      currency: 'THETA',
-      instructions: 'Send THETA to this address to activate your subscription. 1 THETA = Basic Plan (30 days), 5 THETA = Premium Plan (30 days)'
+      currency: 'TFUEL',
+      instructions: 'Send TFUEL (Theta native gas token) to this address to activate your subscription. 1 TFUEL = Basic (30 days), 5 TFUEL = Premium (30 days). You need a small amount of TFUEL to cover gas when sending from your wallet.'
     })
   } catch (error) {
     console.error('Error generating payment address:', error)
