@@ -23,14 +23,9 @@ export default function Navbar() {
   const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/auth/validate', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const headers: Record<string, string> = {}
+      if (token) headers.Authorization = `Bearer ${token}`
+      const response = await fetch('/api/auth/validate', { headers });
 
       if (response.ok) {
         const { user } = await response.json();

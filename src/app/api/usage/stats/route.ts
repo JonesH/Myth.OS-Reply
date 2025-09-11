@@ -57,14 +57,12 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.substring(7)
-    const user = await AuthService.validateToken(token)
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
+    const user = token
+      ? await AuthService.validateToken(token)
+      : (process.env.DEMO_MODE === 'true' ? await AuthService.getOrCreateDemoUser() : null)
     if (!user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)

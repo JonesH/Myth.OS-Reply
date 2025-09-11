@@ -51,18 +51,11 @@ export default function SubscriptionDashboard() {
   const fetchSubscriptionData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/auth/login')
-        return
-      }
-
+      const headers: Record<string, string> = {}
+      if (token) headers.Authorization = `Bearer ${token}`
       const [statusRes, historyRes, plansRes] = await Promise.all([
-        fetch('/api/subscriptions/status', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch('/api/subscriptions/history', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
+        fetch('/api/subscriptions/status', { headers }),
+        fetch('/api/subscriptions/history', { headers }),
         fetch('/api/subscriptions/plans')
       ])
 

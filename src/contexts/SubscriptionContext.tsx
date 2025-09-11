@@ -26,16 +26,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const token = localStorage.getItem('token')
-      if (!token) {
-        setSubscriptionStatus(null)
-        return
-      }
-
-      const response = await fetch('/api/subscriptions/status', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const headers: Record<string, string> = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      const response = await fetch('/api/subscriptions/status', { headers })
 
       if (response.ok) {
         const data = await response.json()
