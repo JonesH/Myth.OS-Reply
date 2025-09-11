@@ -211,7 +211,7 @@ export default function PaymentPlansPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">AI Models</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">AI Models with EdgeCloude</td>
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
                     {plan.id === 'free' ? 'Basic' : plan.id === 'basic' ? 'Standard' : 'Advanced'}
@@ -223,9 +223,15 @@ export default function PaymentPlansPage() {
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
                     {plan.id === 'free' ? (
-                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mr-1" />
+                        Limited
+                      </span>
                     ) : (
-                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mr-1" />
+                        Full
+                      </span>
                     )}
                   </td>
                 ))}
@@ -235,11 +241,20 @@ export default function PaymentPlansPage() {
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
                     {plan.id === 'free' ? (
-                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mr-1" />
+                        Basic
+                      </span>
                     ) : plan.id === 'basic' ? (
-                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mr-1" />
+                        Standard
+                      </span>
                     ) : (
-                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mr-1" />
+                        Advanced
+                      </span>
                     )}
                   </td>
                 ))}
@@ -249,9 +264,15 @@ export default function PaymentPlansPage() {
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
                     {plan.id === 'premium' || plan.id === 'enterprise' ? (
-                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mr-1" />
+                        Yes
+                      </span>
                     ) : (
-                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mr-1" />
+                        No
+                      </span>
                     )}
                   </td>
                 ))}
@@ -261,9 +282,15 @@ export default function PaymentPlansPage() {
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
                     {plan.id === 'free' ? (
-                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mr-1" />
+                        Community
+                      </span>
                     ) : (
-                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                      <span className="flex items-center justify-center">
+                        <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mr-1" />
+                        Email
+                      </span>
                     )}
                   </td>
                 ))}
