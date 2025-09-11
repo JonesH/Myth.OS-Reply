@@ -2,27 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { TwitterOAuthService } from '@/lib/services/twitterOAuth'
 import { prisma } from '@/lib/database'
+import { 
+  isNoDatabaseMode, 
+  inMemoryTwitterAccounts,
+  generateId
+} from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
-
-// Check if demo mode is enabled for Twitter OAuth specifically
-const isTwitterOAuthDemoMode = () => {
-  // Check if we have OAuth credentials
-  const hasTwitterOAuthCredentials = process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET
-  
-  // Use demo mode if:
-  // 1. We don't have OAuth credentials OR
-  // 2. Demo mode is explicitly enabled
-  if (!hasTwitterOAuthCredentials) {
-    return true // No credentials, use demo mode
-  }
-  
-  if (process.env.TWITTER_OAUTH_DEMO_MODE === 'true') {
-    return true // Demo mode explicitly enabled
-  }
-  
-  return false // We have credentials and demo mode is not enabled, use real OAuth
-}
 
 /**
  * @swagger
@@ -133,44 +119,75 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // In demo mode, return mock account data
-    if (isTwitterOAuthDemoMode()) {
-      const mockAccount = {
-        id: `demo-twitter-account-${Date.now()}`,
-        twitterUsername: screenName,
-        isActive: true,
-        createdAt: new Date().toISOString()
-      }
-      return NextResponse.json(mockAccount, { status: 201 })
-    }
-
     // Store the Twitter account
-    const account = await prisma.twitterAccount.upsert({
-      where: {
-        userId_twitterUsername: {
-          userId: user.id,
-          twitterUsername: screenName
+    let account
+    
+    if (isNoDatabaseMode()) {
+      // Use in-memory storage
+      const accountKey = `${user.id}_${screenName}`
+      const existingAccount = Array.from(inMemoryTwitterAccounts.values())
+        .find(acc => acc.userId === user.id && acc.twitterUsername === screenName)
+      
+      if (existingAccount) {
+        // Update existing account
+        existingAccount.accessToken = accessToken
+        existingAccount.accessTokenSecret = accessSecret
+        existingAccount.isActive = true
+        inMemoryTwitterAccounts.set(existingAccount.id, existingAccount)
+        account = {
+          id: existingAccount.id,
+          twitterUsername: existingAccount.twitterUsername,
+          isActive: existingAccount.isActive,
+          createdAt: existingAccount.createdAt
         }
-      },
-      update: {
-        accessToken,
-        accessTokenSecret: accessSecret,
-        isActive: true
-      },
-      create: {
-        userId: user.id,
-        twitterUsername: screenName,
-        accessToken,
-        accessTokenSecret: accessSecret,
-        isActive: true
-      },
-      select: {
-        id: true,
-        twitterUsername: true,
-        isActive: true,
-        createdAt: true
+      } else {
+        // Create new account
+        const newAccount = {
+          id: generateId(),
+          userId: user.id,
+          twitterUsername: screenName,
+          accessToken,
+          accessTokenSecret: accessSecret,
+          isActive: true,
+          createdAt: new Date()
+        }
+        inMemoryTwitterAccounts.set(newAccount.id, newAccount)
+        account = {
+          id: newAccount.id,
+          twitterUsername: newAccount.twitterUsername,
+          isActive: newAccount.isActive,
+          createdAt: newAccount.createdAt
+        }
       }
-    })
+    } else {
+      // Use database storage
+      account = await prisma.twitterAccount.upsert({
+        where: {
+          userId_twitterUsername: {
+            userId: user.id,
+            twitterUsername: screenName
+          }
+        },
+        update: {
+          accessToken,
+          accessTokenSecret: accessSecret,
+          isActive: true
+        },
+        create: {
+          userId: user.id,
+          twitterUsername: screenName,
+          accessToken,
+          accessTokenSecret: accessSecret,
+          isActive: true
+        },
+        select: {
+          id: true,
+          twitterUsername: true,
+          isActive: true,
+          createdAt: true
+        }
+      })
+    }
 
     return NextResponse.json(account, { status: 201 })
 

@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-// Removed prisma import - using demo mode only
+import { isNoDatabaseMode, inMemoryUsers } from '@/lib/inMemoryStorage'
 
 const getJWTSecret = () => {
   const secret = process.env.JWT_SECRET
@@ -52,11 +52,23 @@ const DEMO_USERS = [
 
 export class AuthService {
   private static isDemoMode() {
-    // Always true for now - no database mode
-    return true
+    return isNoDatabaseMode()
   }
 
   static async getOrCreateDemoUser(): Promise<AuthUser> {
+    if (this.isDemoMode()) {
+      // Get demo user from in-memory storage
+      const demoUser = inMemoryUsers.get('demo-user-1')
+      if (demoUser) {
+        return { 
+          id: demoUser.id, 
+          email: demoUser.email, 
+          username: demoUser.username 
+        }
+      }
+    }
+    
+    // Fallback to hardcoded demo user
     const demoUser = DEMO_USERS[0]
     return { 
       id: demoUser.id, 
@@ -99,10 +111,28 @@ export class AuthService {
   static async login(data: LoginData): Promise<{ user: AuthUser; token: string }> {
     const { emailOrUsername, password } = data
 
-    // In demo mode, find matching demo user or return first demo user
-    let matchedUser = DEMO_USERS.find(user => 
-      user.email === emailOrUsername || user.username === emailOrUsername
-    )
+    let matchedUser
+    
+    if (this.isDemoMode()) {
+      // Search in-memory users first
+      const inMemoryUser = Array.from(inMemoryUsers.values()).find(user => 
+        user.email === emailOrUsername || user.username === emailOrUsername
+      )
+      
+      if (inMemoryUser) {
+        matchedUser = inMemoryUser
+      } else {
+        // Fallback to demo users
+        matchedUser = DEMO_USERS.find(user => 
+          user.email === emailOrUsername || user.username === emailOrUsername
+        )
+      }
+    } else {
+      // TODO: Add database user lookup when not in NO_DATABASE mode
+      matchedUser = DEMO_USERS.find(user => 
+        user.email === emailOrUsername || user.username === emailOrUsername
+      )
+    }
     
     // If no match found, use default demo user
     if (!matchedUser) {
@@ -131,8 +161,23 @@ export class AuthService {
       const decoded = jwt.verify(token, getJWTSecret()) as any
       
       
-      // Find demo user by ID
-      const matchedUser = DEMO_USERS.find(user => user.id === decoded.userId)
+      // Find user by ID
+      let matchedUser
+      
+      if (this.isDemoMode()) {
+        // Search in-memory users first
+        const inMemoryUser = inMemoryUsers.get(decoded.userId)
+        if (inMemoryUser) {
+          matchedUser = inMemoryUser
+        } else {
+          // Fallback to demo users
+          matchedUser = DEMO_USERS.find(user => user.id === decoded.userId)
+        }
+      } else {
+        // TODO: Add database user lookup when not in NO_DATABASE mode
+        matchedUser = DEMO_USERS.find(user => user.id === decoded.userId)
+      }
+      
       if (!matchedUser) {
         // Fallback to first demo user
         const demoUser = DEMO_USERS[0]

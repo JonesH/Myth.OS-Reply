@@ -1,52 +1,11 @@
 import { TwitterService } from './twitter'
 import { prisma } from '@/lib/database'
 import crypto from 'crypto'
-
-// Check if demo mode is enabled for Twitter OAuth specifically
-// We want to use real Twitter OAuth even in demo mode for authentication
-const isTwitterOAuthDemoMode = () => {
-  // Check if we have OAuth credentials
-  const hasTwitterOAuthCredentials = process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET
-  
-  // Use demo mode if:
-  // 1. We don't have OAuth credentials OR
-  // 2. Demo mode is explicitly enabled
-  if (!hasTwitterOAuthCredentials) {
-    return true // No credentials, use demo mode
-  }
-  
-  if (process.env.TWITTER_OAUTH_DEMO_MODE === 'true') {
-    return true // Demo mode explicitly enabled
-  }
-  
-  return false // We have credentials and demo mode is not enabled, use real OAuth
-}
-
-// Demo OAuth state storage (in-memory for demo)
-const demoOAuthStates = new Map<string, {
-  userId: string
-  state: string
-  requestToken: string
-  requestSecret: string
-  callbackUrl: string
-  expiresAt: Date
-}>()
-
-// Cleanup expired demo states
-const cleanupDemoStates = () => {
-  const now = new Date()
-  const keysToDelete: string[] = []
-  
-  demoOAuthStates.forEach((value, key) => {
-    if (value.expiresAt < now) {
-      keysToDelete.push(key)
-    }
-  })
-  
-  keysToDelete.forEach(key => {
-    demoOAuthStates.delete(key)
-  })
-}
+import { 
+  isNoDatabaseMode, 
+  inMemoryOAuthStates,
+  cleanupExpiredOAuthStates
+} from '@/lib/inMemoryStorage'
 
 export class TwitterOAuthService {
   
@@ -57,29 +16,6 @@ export class TwitterOAuthService {
     authUrl: string
     state: string
   }> {
-    // In demo mode, return mock authorization URL
-    if (isTwitterOAuthDemoMode()) {
-      const state = crypto.randomBytes(32).toString('hex')
-      const mockRequestToken = 'demo_oauth_token_' + Date.now()
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
-      
-      // Store in demo state storage
-      demoOAuthStates.set(state, {
-        userId,
-        state,
-        requestToken: mockRequestToken,
-        requestSecret: 'demo_oauth_secret',
-        callbackUrl,
-        expiresAt
-      })
-      
-      // Return demo authorization URL
-      return {
-        authUrl: `${callbackUrl}?oauth_token=${mockRequestToken}&oauth_verifier=demo_verifier&state=${state}`,
-        state
-      }
-    }
-
     const apiKey = process.env.TWITTER_API_KEY!
     const apiSecret = process.env.TWITTER_API_SECRET!
     
@@ -94,16 +30,30 @@ export class TwitterOAuthService {
     
     // Store OAuth state temporarily (expires in 10 minutes)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
-    await prisma.oAuthState.create({
-      data: {
+    
+    if (isNoDatabaseMode()) {
+      // Store in memory
+      inMemoryOAuthStates.set(state, {
         userId,
         state,
         requestToken: requestTokenData.oauth_token,
         requestSecret: requestTokenData.oauth_token_secret,
         callbackUrl,
         expiresAt
-      }
-    })
+      })
+    } else {
+      // Store in database
+      await prisma.oAuthState.create({
+        data: {
+          userId,
+          state,
+          requestToken: requestTokenData.oauth_token,
+          requestSecret: requestTokenData.oauth_token_secret,
+          callbackUrl,
+          expiresAt
+        }
+      })
+    }
     
     const authUrl = `https://api.twitter.com/oauth/authorize?oauth_token=${requestTokenData.oauth_token}`
     
@@ -127,40 +77,17 @@ export class TwitterOAuthService {
     screenName: string
     twitterUserId: string
   }> {
-    // In demo mode, return mock access tokens
-    if (isTwitterOAuthDemoMode()) {
-      cleanupDemoStates()
-      const oauthState = demoOAuthStates.get(state)
-      
-      if (!oauthState) {
-        throw new Error('Invalid OAuth state')
-      }
-      
-      if (oauthState.expiresAt < new Date()) {
-        demoOAuthStates.delete(state)
-        throw new Error('OAuth state expired')
-      }
-      
-      if (oauthState.requestToken !== oauthToken) {
-        throw new Error('OAuth token mismatch')
-      }
-      
-      // Clean up demo state
-      demoOAuthStates.delete(state)
-      
-      return {
-        accessToken: 'demo_access_token_' + Date.now(),
-        accessSecret: 'demo_access_secret_' + Date.now(),
-        userId: oauthState.userId,
-        screenName: 'demo_twitter_user',
-        twitterUserId: 'demo_twitter_id_' + oauthState.userId
-      }
-    }
-
     // Retrieve and validate OAuth state
-    const oauthState = await prisma.oAuthState.findUnique({
-      where: { state }
-    })
+    let oauthState
+    
+    if (isNoDatabaseMode()) {
+      cleanupExpiredOAuthStates()
+      oauthState = inMemoryOAuthStates.get(state)
+    } else {
+      oauthState = await prisma.oAuthState.findUnique({
+        where: { state }
+      })
+    }
     
     if (!oauthState) {
       throw new Error('Invalid OAuth state')
@@ -168,7 +95,11 @@ export class TwitterOAuthService {
     
     if (oauthState.expiresAt < new Date()) {
       // Clean up expired state
-      await prisma.oAuthState.delete({ where: { state } })
+      if (isNoDatabaseMode()) {
+        inMemoryOAuthStates.delete(state)
+      } else {
+        await prisma.oAuthState.delete({ where: { state } })
+      }
       throw new Error('OAuth state expired')
     }
     
@@ -188,7 +119,11 @@ export class TwitterOAuthService {
     )
     
     // Clean up OAuth state
-    await prisma.oAuthState.delete({ where: { state } })
+    if (isNoDatabaseMode()) {
+      inMemoryOAuthStates.delete(state)
+    } else {
+      await prisma.oAuthState.delete({ where: { state } })
+    }
     
     return {
       accessToken: accessTokenData.oauth_token,
@@ -203,17 +138,16 @@ export class TwitterOAuthService {
    * Clean up expired OAuth states
    */
   static async cleanupExpiredStates(): Promise<void> {
-    if (isDemoMode()) {
-      cleanupDemoStates()
-      return
-    }
-
-    await prisma.oAuthState.deleteMany({
-      where: {
-        expiresAt: {
-          lt: new Date()
+    if (isNoDatabaseMode()) {
+      cleanupExpiredOAuthStates()
+    } else {
+      await prisma.oAuthState.deleteMany({
+        where: {
+          expiresAt: {
+            lt: new Date()
+          }
         }
-      }
-    })
+      })
+    }
   }
 }
