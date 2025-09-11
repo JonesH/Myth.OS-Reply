@@ -17,6 +17,10 @@ jobs:
     
     env:
       DATABASE_URL: "file:./test.db"
+      NEXTAUTH_SECRET: "test-secret-for-ci"
+      NEXTAUTH_URL: "http://localhost:3000"
+      TWITTER_CLIENT_ID: "test-client-id"
+      TWITTER_CLIENT_SECRET: "test-client-secret"
       
     steps:
       - name: Checkout code

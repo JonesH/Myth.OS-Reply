@@ -1,63 +1,60 @@
-# Myth.OS-Reply Deployment Guide
+# Deployment Configuration
 
-## Vercel Deployment (SQLite)
+## GitHub Actions CI/CD Pipeline
 
-### Prerequisites
-- No external database required! We're using SQLite with in-memory storage for Vercel.
+This repository uses GitHub Actions for automated testing and Vercel deployment.
 
-### Environment Variables
-Set these in your Vercel dashboard:
+### Required GitHub Secrets
 
-#### Required
-- `NEXTAUTH_SECRET` - Random secret key for NextAuth
-- `NEXTAUTH_URL` - Your Vercel app URL (e.g., https://your-app.vercel.app)
-- `JWT_SECRET` - Random secret key for JWT tokens
+To configure the deployment pipeline, add these secrets to your GitHub repository:
 
-#### Twitter API (Required for Twitter features)
-- `TWITTER_CLIENT_ID` - Twitter OAuth client ID
-- `TWITTER_CLIENT_SECRET` - Twitter OAuth client secret
+**Go to:** Settings → Secrets and variables → Actions → New repository secret
 
-#### Optional
-- `OPENROUTER_API_KEY` - For AI features
-- `TWITTERIO_KEY` - For advanced Twitter analytics
+#### 1. VERCEL_TOKEN
+- **Value**: Your Vercel API token
+- **Get it from**: https://vercel.com/account/tokens
+- **Purpose**: Allows GitHub Actions to deploy to Vercel
 
-### Database Setup
-- **Local Development**: Uses SQLite file (`./dev.db`)
-- **Vercel Production**: Uses in-memory SQLite (data resets on each deployment)
-- **No external database required!**
+#### 2. VERCEL_ORG_ID  
+- **Value**: Your Vercel organization/team ID
+- **Get it from**: 
+  ```bash
+  vercel link
+  # Then check .vercel/project.json for "orgId"
+  ```
+- **Purpose**: Identifies your Vercel organization
 
-### Deployment Steps
-1. Connect your GitHub repository to Vercel
-2. Set environment variables (no DATABASE_URL needed)
-3. Deploy - the build process will:
-   - Install dependencies
-   - Generate Prisma client
-   - Build the Next.js app
-   - Use in-memory SQLite for production
+#### 3. VERCEL_PROJECT_ID
+- **Value**: Your Vercel project ID  
+- **Get it from**:
+  ```bash
+  vercel link
+  # Then check .vercel/project.json for "projectId"
+  ```
+- **Purpose**: Identifies your specific project
 
-### Local Development
-1. Create `.env.local` file with:
+### Getting Vercel IDs
+
+1. Run `vercel link` in your project root
+2. Follow the prompts to link your project
+3. Check `.vercel/project.json` for the IDs:
+   ```json
+   {
+     "orgId": "your-org-id-here",
+     "projectId": "your-project-id-here"
+   }
    ```
-   DATABASE_URL="file:./dev.db"
-   NEXTAUTH_SECRET=your-secret-key
-   NEXTAUTH_URL=http://localhost:3000
-   JWT_SECRET=your-jwt-secret
-   TWITTER_CLIENT_ID=your-twitter-client-id
-   TWITTER_CLIENT_SECRET=your-twitter-client-secret
-   ```
-2. Run `npx prisma migrate dev` to create migrations
-3. Run `npm run dev` to start development server
 
-### Important Notes
-- **Vercel**: Data resets on each deployment (in-memory database)
-- **Local**: Data persists in `./dev.db` file
-- **For persistent data**: Consider upgrading to PostgreSQL later
+### Workflow Behavior
 
-## Features Included
-- ✅ Subscription Management (Free/Basic/Premium tiers)
-- ✅ Payment Flow with Theta blockchain integration
-- ✅ Twitter OAuth integration
-- ✅ AI-powered reply generation
-- ✅ Real-time subscription status updates
-- ✅ Professional responsive UI
-- ✅ Usage tracking and analytics
+- **Pull Requests**: Deploys preview environments
+- **Main Branch**: Deploys to production after CI passes
+- **CI Steps**: Install → Lint → Build → Test → Deploy
+
+### Manual Deployment
+
+If you need to deploy manually:
+```bash
+vercel --prod  # Production deployment
+vercel         # Preview deployment
+```

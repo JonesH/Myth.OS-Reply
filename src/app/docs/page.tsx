@@ -1,8 +1,16 @@
 'use client'
 
+import dynamicImport from 'next/dynamic'
 import { useEffect, useState } from 'react'
-import SwaggerUI from 'swagger-ui-react'
 import 'swagger-ui-react/swagger-ui.css'
+
+// Dynamically import SwaggerUI to avoid SSR issues
+const SwaggerUI = dynamicImport(() => import('swagger-ui-react'), {
+  ssr: false,
+  loading: () => <div>Loading API documentation...</div>
+})
+
+export const dynamic = 'force-dynamic'
 
 export default function DocsPage() {
   const [spec, setSpec] = useState<any>(null)
