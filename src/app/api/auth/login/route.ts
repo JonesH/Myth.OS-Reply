@@ -63,10 +63,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('About to call AuthService.login...') // Debug log
     const result = await AuthService.login({ emailOrUsername, password })
+    console.log('AuthService.login successful') // Debug log
 
     return NextResponse.json(result)
   } catch (error: any) {
+    console.error('Login API error:', error) // Enhanced error logging
+    console.error('Error message:', error.message) // Enhanced error logging
+    console.error('Error stack:', error.stack) // Enhanced error logging
+    
     if (error.message === 'Invalid credentials') {
       return NextResponse.json(
         { error: error.message },
@@ -75,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     )
   }
