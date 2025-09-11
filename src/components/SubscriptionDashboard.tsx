@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -48,25 +48,14 @@ export default function SubscriptionDashboard() {
   const [transactionHash, setTransactionHash] = useState('')
   const [upgrading, setUpgrading] = useState(false)
 
-  useEffect(() => {
-    fetchSubscriptionData()
-  }, [])
-
-  const fetchSubscriptionData = async () => {
+  const fetchSubscriptionData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/auth/login')
-        return
-      }
-
+      const headers: Record<string, string> = {}
+      if (token) headers.Authorization = `Bearer ${token}`
       const [statusRes, historyRes, plansRes] = await Promise.all([
-        fetch('/api/subscriptions/status', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch('/api/subscriptions/history', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
+        fetch('/api/subscriptions/status', { headers }),
+        fetch('/api/subscriptions/history', { headers }),
         fetch('/api/subscriptions/plans')
       ])
 
@@ -90,7 +79,11 @@ export default function SubscriptionDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    fetchSubscriptionData()
+  }, [fetchSubscriptionData])
 
   const handleUpgrade = async () => {
     if (!selectedPlan || !transactionHash) {

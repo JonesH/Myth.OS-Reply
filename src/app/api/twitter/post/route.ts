@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +36,23 @@ export async function POST(request: NextRequest) {
   console.log('🔍 Twitter Post API - Starting request');
   
   try {
+    // Demo mode: simulate successful post without requiring auth
+    if (process.env.DEMO_MODE === 'true') {
+      const { text } = await request.json().catch(() => ({ text: undefined }));
+      const content = typeof text === "string" && text.trim() ? text.trim() : "Test tweet from MythosReply (demo)";
+      console.log('🧪 Demo mode - simulating post:', content)
+      return NextResponse.json({
+        success: true,
+        data: { simulated: true, text: content },
+        tweetId: '1234567890',
+        tweetUrl: 'https://twitter.com/demo/status/1234567890',
+        message: 'Demo mode: tweet simulated (not posted).',
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    // Production path expects NextAuth JWT cookie
+    const { getToken } = await import('next-auth/jwt')
     const jwt = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     if (!jwt) {
       console.log('❌ No JWT token found');

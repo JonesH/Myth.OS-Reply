@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import TwitterConnectButton from "@/components/TwitterConnectButton";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
@@ -20,21 +20,12 @@ export default function Navbar() {
   console.log('📍 User ID:', user?.id);
   console.log('📊 Subscription Status:', subscriptionStatus);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/auth/validate', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const headers: Record<string, string> = {}
+      if (token) headers.Authorization = `Bearer ${token}`
+      const response = await fetch('/api/auth/validate', { headers });
 
       if (response.ok) {
         const { user } = await response.json();
@@ -51,7 +42,11 @@ export default function Navbar() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshSubscriptionStatus]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');

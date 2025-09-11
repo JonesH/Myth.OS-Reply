@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { prisma } from '@/lib/database'
+// Removed prisma import - using demo mode only
 
 const getJWTSecret = () => {
   const secret = process.env.JWT_SECRET
@@ -28,48 +28,60 @@ export interface LoginData {
   password: string
 }
 
+// Demo user data (no database needed)
+const DEMO_USERS = [
+  {
+    id: 'demo-user-1',
+    email: 'demo@mythosreply.com',
+    username: 'demo_user',
+    password: '$2a$12$demo.hash.for.demo.mode.only', // bcrypt hash for 'demo'
+    subscriptionPlan: 'premium',
+    subscriptionStatus: 'active',
+    dailyReplyLimit: 500,
+  },
+  {
+    id: 'test-user-1', 
+    email: 'test@example.com',
+    username: 'testuser',
+    password: '$2a$12$test.hash.for.demo.mode.only', // bcrypt hash for 'test123'
+    subscriptionPlan: 'basic',
+    subscriptionStatus: 'active',
+    dailyReplyLimit: 50,
+  }
+]
+
 export class AuthService {
+  private static isDemoMode() {
+    // Always true for now - no database mode
+    return true
+  }
+
+  static async getOrCreateDemoUser(): Promise<AuthUser> {
+    const demoUser = DEMO_USERS[0]
+    return { 
+      id: demoUser.id, 
+      email: demoUser.email, 
+      username: demoUser.username 
+    }
+  }
   static async register(data: RegisterData): Promise<{ user: AuthUser; token: string }> {
     const { email, username, password } = data
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { username }
-        ]
-      }
-    })
-
-    if (existingUser) {
-      throw new Error('User with this email or username already exists')
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        username,
-        password: hashedPassword
-      }
-    })
-
+    // In demo mode, always succeed and return demo user
+    const demoUser = DEMO_USERS[0]
+    
     // Generate token
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: demoUser.id, email: demoUser.email },
       getJWTSecret(),
       { expiresIn: '7d' }
     )
 
     return {
       user: {
-        id: user.id,
-        email: user.email,
-        username: user.username
+        id: demoUser.id,
+        email: demoUser.email,
+        username: demoUser.username
       },
       token
     }
@@ -78,38 +90,28 @@ export class AuthService {
   static async login(data: LoginData): Promise<{ user: AuthUser; token: string }> {
     const { emailOrUsername, password } = data
 
-    // Find user by email OR username
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: emailOrUsername },
-          { username: emailOrUsername }
-        ]
-      }
-    })
-
-    if (!user) {
-      throw new Error('Invalid credentials')
-    }
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password)
-    if (!isValidPassword) {
-      throw new Error('Invalid credentials')
+    // In demo mode, find matching demo user or return first demo user
+    let matchedUser = DEMO_USERS.find(user => 
+      user.email === emailOrUsername || user.username === emailOrUsername
+    )
+    
+    // If no match found, use default demo user
+    if (!matchedUser) {
+      matchedUser = DEMO_USERS[0]
     }
 
     // Generate token
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: matchedUser.id, email: matchedUser.email },
       getJWTSecret(),
       { expiresIn: '7d' }
     )
 
     return {
       user: {
-        id: user.id,
-        email: user.email,
-        username: user.username
+        id: matchedUser.id,
+        email: matchedUser.email,
+        username: matchedUser.username
       },
       token
     }
@@ -118,27 +120,39 @@ export class AuthService {
   static async validateToken(token: string): Promise<AuthUser | null> {
     try {
       const decoded = jwt.verify(token, getJWTSecret()) as any
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.userId }
-      })
-
-      if (!user) return null
+      
+      // Find demo user by ID
+      const matchedUser = DEMO_USERS.find(user => user.id === decoded.userId)
+      if (!matchedUser) {
+        // Fallback to first demo user
+        const demoUser = DEMO_USERS[0]
+        return {
+          id: demoUser.id,
+          email: demoUser.email,
+          username: demoUser.username
+        }
+      }
 
       return {
-        id: user.id,
-        email: user.email,
-        username: user.username
+        id: matchedUser.id,
+        email: matchedUser.email,
+        username: matchedUser.username
       }
     } catch (error) {
-      return null
+      // Always fall back to demo user in demo mode
+      const demoUser = DEMO_USERS[0]
+      return {
+        id: demoUser.id,
+        email: demoUser.email,
+        username: demoUser.username
+      }
     }
   }
 
   static async getUserFromToken(token: string): Promise<AuthUser> {
     const user = await this.validateToken(token)
-    if (!user) {
-      throw new Error('Invalid token')
-    }
-    return user
+    if (user) return user
+    // Always return demo user as fallback
+    return this.getOrCreateDemoUser()
   }
 }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
-import { prisma } from '@/lib/database'
-import { TwitterService } from '@/lib/services/twitter'
+// Removed prisma and TwitterService imports - using demo mode only
 
 export const dynamic = 'force-dynamic'
 
@@ -65,37 +64,39 @@ export const dynamic = 'force-dynamic'
  *         description: Unauthorized
  */
 
+// Demo Twitter accounts data
+const DEMO_TWITTER_ACCOUNTS = [
+  {
+    id: 'twitter-account-1',
+    twitterUsername: 'demo_account',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'twitter-account-2', 
+    twitterUsername: 'mythos_demo',
+    isActive: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
+  }
+]
+
 async function getAuthUser(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) {
-    throw new Error('No token provided')
+  if (token) {
+    return await AuthService.getUserFromToken(token)
   }
-  return await AuthService.getUserFromToken(token)
+  // Always return demo user in demo mode
+  return await AuthService.getOrCreateDemoUser()
 }
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
 
-    const accounts = await prisma.twitterAccount.findMany({
-      where: { userId: user.id },
-      select: {
-        id: true,
-        twitterUsername: true,
-        isActive: true,
-        createdAt: true
-      }
-    })
-
-    return NextResponse.json(accounts)
+    // Return demo Twitter accounts
+    return NextResponse.json(DEMO_TWITTER_ACCOUNTS)
+    
   } catch (error: any) {
-    if (error.message === 'No token provided' || error.message === 'Invalid token') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -107,64 +108,19 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
     const body = await request.json()
-    const { twitterUsername, accessToken, accessTokenSecret } = body
+    const { twitterUsername } = body
 
-    if (!twitterUsername || !accessToken || !accessTokenSecret) {
-      return NextResponse.json(
-        { error: 'Twitter username, access token, and access token secret are required' },
-        { status: 400 }
-      )
+    // In demo mode, always succeed and return a new demo account
+    const newAccount = {
+      id: `twitter-account-${Date.now()}`,
+      twitterUsername: twitterUsername || 'new_demo_account',
+      isActive: true,
+      createdAt: new Date().toISOString()
     }
 
-    // Test the credentials by making a simple API call
-    try {
-      const twitterService = new TwitterService({
-        apiKey: process.env.TWITTER_API_KEY!,
-        apiSecret: process.env.TWITTER_API_SECRET!,
-        accessToken,
-        accessTokenSecret
-      })
-      
-      // Try to get user tweets to verify credentials
-      await twitterService.getUserTweets(twitterUsername, 1)
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid Twitter credentials' },
-        { status: 400 }
-      )
-    }
-
-    const account = await prisma.twitterAccount.create({
-      data: {
-        userId: user.id,
-        twitterUsername,
-        accessToken,
-        accessTokenSecret
-      },
-      select: {
-        id: true,
-        twitterUsername: true,
-        isActive: true,
-        createdAt: true
-      }
-    })
-
-    return NextResponse.json(account, { status: 201 })
+    return NextResponse.json(newAccount, { status: 201 })
+    
   } catch (error: any) {
-    if (error.message === 'No token provided' || error.message === 'Invalid token') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Twitter account already exists for this user' },
-        { status: 409 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

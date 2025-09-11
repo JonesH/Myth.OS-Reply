@@ -5,6 +5,7 @@
 Set these in your Vercel Dashboard → Settings → Environment Variables:
 
 ### 1. DATABASE_URL (Required)
+Use a managed Postgres instance (e.g., Neon, Supabase, Vercel Postgres):
 ```
 file:/tmp/prisma/dev.db
 ```
