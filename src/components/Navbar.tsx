@@ -17,22 +17,42 @@ export default function Navbar() {
   const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   
-  console.log('🔍 Navbar - User:', user);
-  console.log('📍 User ID:', user?.id);
-  console.log('📊 Subscription Status:', subscriptionStatus);
+  // Debug logging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 Navbar - User:', user);
+    console.log('📍 User ID:', user?.id);
+    console.log('📊 Subscription Status:', subscriptionStatus);
+  }
 
   const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const headers: Record<string, string> = {}
       if (token) headers.Authorization = `Bearer ${token}`
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Navbar auth check - Token exists:', !!token)
+        console.log('🔍 Navbar auth check - Token length:', token?.length || 0)
+      }
+      
       const response = await fetch('/api/auth/validate', { headers });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Navbar auth check - Response status:', response.status)
+      }
 
       if (response.ok) {
         const { user } = await response.json();
         setUser(user);
         await refreshSubscriptionStatus();
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Navbar auth check - User set:', user.email)
+        }
       } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('❌ Navbar auth check - Auth failed, clearing token')
+        }
         localStorage.removeItem('token');
         setUser(null);
       }
@@ -53,7 +73,9 @@ export default function Navbar() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
-        console.log('🖱️ Clicked outside mobile menu, closing...')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🖱️ Clicked outside mobile menu, closing...')
+        }
         setMobileMenuOpen(false);
       }
     };
@@ -171,7 +193,9 @@ export default function Navbar() {
           <div className="lg:hidden flex items-center">
             <button 
               onClick={() => {
-                console.log('🍔 Mobile menu button clicked, current state:', mobileMenuOpen)
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('🍔 Mobile menu button clicked, current state:', mobileMenuOpen)
+                }
                 setMobileMenuOpen(!mobileMenuOpen)
               }}
               className="p-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -36,7 +36,13 @@ export default function UsageStatsWidget() {
 
       if (response.ok) {
         const data = await response.json()
-        setStats(data)
+        // Update the stats with current subscription data
+        setStats({
+          ...data,
+          currentPlan: subscriptionStatus?.plan || data.currentPlan,
+          dailyLimit: subscriptionStatus?.dailyLimit || data.dailyLimit,
+          repliesUsedToday: subscriptionStatus?.repliesUsedToday || data.repliesUsedToday
+        })
       }
     } catch (error) {
       console.error('Error fetching usage stats:', error)
