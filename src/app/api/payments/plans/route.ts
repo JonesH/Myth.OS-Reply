@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ThetaPaymentService } from '@/lib/services/theta'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/payments/plans:
