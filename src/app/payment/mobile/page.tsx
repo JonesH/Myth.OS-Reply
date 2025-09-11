@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from '@/components/QRCode'
@@ -35,12 +35,7 @@ export default function MobilePaymentPage() {
   const [user, setUser] = useState<any>(null)
   const [currentStep, setCurrentStep] = useState<'plans' | 'payment' | 'tracking'>('plans')
 
-  useEffect(() => {
-    fetchPlans()
-    checkAuth()
-  }, [])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -62,9 +57,9 @@ export default function MobilePaymentPage() {
       console.error('Auth check failed:', error)
       router.push('/auth/login')
     }
-  }
+  }, [router])
 
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     try {
       const response = await fetch('/api/subscriptions/plans')
       if (response.ok) {
@@ -76,7 +71,12 @@ export default function MobilePaymentPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchPlans()
+    checkAuth()
+  }, [fetchPlans, checkAuth])
 
   const generatePaymentAddress = async (plan: Plan) => {
     setGeneratingAddress(true)

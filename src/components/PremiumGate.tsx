@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface SubscriptionStatus {
@@ -29,11 +29,7 @@ export default function PremiumGate({
   const [loading, setLoading] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
-  useEffect(() => {
-    checkSubscriptionStatus()
-  }, [])
-
-  const checkSubscriptionStatus = async () => {
+  const checkSubscriptionStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -54,7 +50,11 @@ export default function PremiumGate({
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    checkSubscriptionStatus()
+  }, [checkSubscriptionStatus])
 
   const hasAccess = () => {
     if (!subscriptionStatus) return false

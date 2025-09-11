@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface TransactionStatus {
   status: 'pending' | 'confirmed' | 'failed' | 'expired'
@@ -21,14 +21,7 @@ export default function TransactionTracker({ paymentAddress, onStatusChange }: T
   const [verifying, setVerifying] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(true)
 
-  useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(checkTransactionStatus, 30000) // Check every 30 seconds
-      return () => clearInterval(interval)
-    }
-  }, [autoRefresh, paymentAddress])
-
-  const checkTransactionStatus = async () => {
+  const checkTransactionStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/payments/status?address=${paymentAddress}`, {
@@ -43,7 +36,14 @@ export default function TransactionTracker({ paymentAddress, onStatusChange }: T
     } catch (error) {
       console.error('Error checking transaction status:', error)
     }
-  }
+  }, [paymentAddress, onStatusChange])
+
+  useEffect(() => {
+    if (autoRefresh) {
+      const interval = setInterval(checkTransactionStatus, 30000) // Check every 30 seconds
+      return () => clearInterval(interval)
+    }
+  }, [autoRefresh, checkTransactionStatus])
 
   const verifyTransactionManually = async () => {
     if (!manualHash.trim()) {
