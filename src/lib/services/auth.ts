@@ -65,25 +65,34 @@ export class AuthService {
     }
   }
   static async register(data: RegisterData): Promise<{ user: AuthUser; token: string }> {
+    console.log('🔄 AuthService.register called with:', { email: data.email, username: data.username })
+    
     const { email, username, password } = data
 
     // In demo mode, always succeed and return demo user
     const demoUser = DEMO_USERS[0]
+    console.log('📝 Using demo user:', demoUser.email)
     
-    // Generate token
-    const token = jwt.sign(
-      { userId: demoUser.id, email: demoUser.email },
-      getJWTSecret(),
-      { expiresIn: '7d' }
-    )
+    try {
+      // Generate token
+      const token = jwt.sign(
+        { userId: demoUser.id, email: demoUser.email },
+        getJWTSecret(),
+        { expiresIn: '7d' }
+      )
+      console.log('✅ Token generated successfully')
 
-    return {
-      user: {
-        id: demoUser.id,
-        email: demoUser.email,
-        username: demoUser.username
-      },
-      token
+      return {
+        user: {
+          id: demoUser.id,
+          email: demoUser.email,
+          username: demoUser.username
+        },
+        token
+      }
+    } catch (error) {
+      console.error('❌ Error generating token:', error)
+      throw error
     }
   }
 

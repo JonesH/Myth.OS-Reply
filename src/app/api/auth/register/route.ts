@@ -78,6 +78,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 })
   } catch (error: any) {
+    console.error('Registration API error:', error)
+    console.error('Error message:', error.message)
+    console.error('Error stack:', error.stack)
+
     if (error.message.includes('already exists')) {
       return NextResponse.json(
         { error: error.message },
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     )
   }
