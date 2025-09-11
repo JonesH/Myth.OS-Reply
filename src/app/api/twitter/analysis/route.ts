@@ -75,6 +75,26 @@ export async function GET(request: NextRequest) {
 
     switch (type) {
       case 'trending':
+        if (isNoDatabaseMode()) {
+          // Return mock trending data for demo mode
+          return NextResponse.json({
+            type: 'trending',
+            data: {
+              topics: [
+                { topic: 'ai', count: 1250, sentiment: 0.45 },
+                { topic: 'crypto', count: 890, sentiment: 0.12 },
+                { topic: 'startups', count: 675, sentiment: 0.38 },
+                { topic: 'blockchain', count: 543, sentiment: 0.28 },
+                { topic: 'web3', count: 432, sentiment: 0.15 },
+                { topic: 'technology', count: 387, sentiment: 0.52 },
+                { topic: 'innovation', count: 298, sentiment: 0.61 },
+                { topic: 'programming', count: 234, sentiment: 0.33 }
+              ],
+              timeframe
+            }
+          })
+        }
+
         const trendingTopics = await analysisService.getTrendingTopics(timeframe as 'hour' | 'day' | 'week')
         return NextResponse.json({
           type: 'trending',
@@ -91,6 +111,29 @@ export async function GET(request: NextRequest) {
             { status: 400 }
           )
         }
+
+        if (isNoDatabaseMode()) {
+          // Return mock sentiment data for demo mode
+          return NextResponse.json({
+            type: 'sentiment',
+            data: {
+              topic,
+              timeframe,
+              overall: {
+                sentiment: 'positive',
+                score: 0.34,
+                confidence: 0.72
+              },
+              timeline: [
+                { date: '2025-01-08', sentiment: 0.28, count: 45 },
+                { date: '2025-01-09', sentiment: 0.31, count: 52 },
+                { date: '2025-01-10', sentiment: 0.38, count: 67 },
+                { date: '2025-01-11', sentiment: 0.34, count: 58 }
+              ]
+            }
+          })
+        }
+
         const sentimentData = await analysisService.getTopicSentiment(topic, timeframe as "day" | "week" | "month")
         return NextResponse.json({
           type: 'sentiment',
