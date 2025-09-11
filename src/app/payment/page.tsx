@@ -45,6 +45,17 @@ export default function PaymentPlansPage() {
     checkAuth()
   }, [])
 
+  // Set current plan when both plans and user data are loaded
+  useEffect(() => {
+    if (plans.length > 0 && user?.subscriptionPlan) {
+      const currentPlan = plans.find(plan => plan.id === user.subscriptionPlan)
+      if (currentPlan) {
+        setSelectedPlan(currentPlan)
+        console.log('✅ Current plan set from useEffect:', currentPlan.name)
+      }
+    }
+  }, [plans, user])
+
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -404,12 +415,12 @@ export default function PaymentPlansPage() {
                   : 'bg-gray-600 hover:bg-gray-700 text-white'
               }`}
             >
-              {plan.id === 'free' 
-                ? 'Current Plan' 
+              {user?.subscriptionPlan === plan.id
+                ? 'Current Plan'
                 : selectedPlan?.id === plan.id 
                 ? 'Activated'  
                 : generatingAddress 
-                ? 'Activating...' 
+                ? 'Activating...'
                 : 'Activate Plan'}
             </button>
           </div>
