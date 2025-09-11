@@ -66,20 +66,15 @@ export default function PaymentPlansPage() {
   }, [router]);
 
   const fetchPlans = useCallback(async () => {
-    console.log("🔄 Fetching plans...");
     try {
       const response = await fetch("/api/subscriptions/plans");
-      console.log("📡 Plans response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Plans fetched:", data);
         setPlans(data.plans);
-      } else {
-        console.error("❌ Failed to fetch plans");
       }
     } catch (error) {
-      console.error("❌ Error fetching plans:", error);
+      console.error("Error fetching plans:", error);
     } finally {
       setLoading(false);
     }
@@ -96,17 +91,14 @@ export default function PaymentPlansPage() {
       const currentPlan = plans.find(plan => plan.id === subscriptionStatus.plan)
       if (currentPlan) {
         setSelectedPlan(currentPlan)
-        console.log('✅ Current plan set from subscription context:', currentPlan.name)
       }
     }
   }, [plans, subscriptionStatus])
 
   const selectPlan = async (plan: Plan) => {
-    console.log('🔄 Selecting plan:', plan)
     setGeneratingAddress(true)
     try {
       const token = localStorage.getItem('token')
-      console.log('📝 Token exists:', !!token)
       
       if (!token) {
         alert('Please log in to select a plan')

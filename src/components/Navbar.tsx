@@ -10,64 +10,15 @@ interface User {
   username: string
 }
 
+import { useAuth } from '@/contexts/AuthContext'
+
 export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { user, logout } = useAuth();
   const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   
-  // Debug logging (only in development)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 Navbar - User:', user);
-    console.log('📍 User ID:', user?.id);
-    console.log('📊 Subscription Status:', subscriptionStatus);
-  }
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers: Record<string, string> = {}
-      if (token) headers.Authorization = `Bearer ${token}`
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 Navbar auth check - Token exists:', !!token)
-        console.log('🔍 Navbar auth check - Token length:', token?.length || 0)
-      }
-      
-      const response = await fetch('/api/auth/validate', { headers });
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 Navbar auth check - Response status:', response.status)
-      }
-
-      if (response.ok) {
-        const { user } = await response.json();
-        setUser(user);
-        await refreshSubscriptionStatus();
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ Navbar auth check - User set:', user.email)
-        }
-      } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('❌ Navbar auth check - Auth failed, clearing token')
-        }
-        localStorage.removeItem('token');
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshSubscriptionStatus]);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
   // Handle click outside mobile menu
   useEffect(() => {
@@ -90,8 +41,7 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
+    logout();
     window.location.href = '/';
   };
 
@@ -139,9 +89,7 @@ export default function Navbar() {
 
           {/* Desktop Authentication */}
           <div className="hidden lg:flex items-center space-x-4">
-            {loading ? (
-              <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
-            ) : user ? (
+            {user ? (
               <div className="flex items-center space-x-4">
                 {/* Subscription Status Badge */}
                 {subscriptionStatus && (
@@ -272,9 +220,7 @@ export default function Navbar() {
 
               {/* Mobile Authentication Section */}
               <div className="pt-4 border-t border-gray-200/60">
-                {loading ? (
-                  <div className="animate-pulse bg-gray-200 h-8 w-full rounded"></div>
-                ) : user ? (
+                {user ? (
                   <div className="space-y-3">
                     {/* Mobile Subscription Status */}
                     {subscriptionStatus && (

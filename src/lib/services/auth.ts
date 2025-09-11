@@ -130,18 +130,12 @@ export class AuthService {
     try {
       const decoded = jwt.verify(token, getJWTSecret()) as any
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 AuthService.validateToken - Token decoded successfully:', decoded)
-      }
       
       // Find demo user by ID
       const matchedUser = DEMO_USERS.find(user => user.id === decoded.userId)
       if (!matchedUser) {
         // Fallback to first demo user
         const demoUser = DEMO_USERS[0]
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 AuthService.validateToken - Using fallback demo user')
-        }
         return {
           id: demoUser.id,
           email: demoUser.email,
@@ -149,9 +143,6 @@ export class AuthService {
         }
       }
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('✅ AuthService.validateToken - Found matching user:', matchedUser.email)
-      }
 
       return {
         id: matchedUser.id,
@@ -159,15 +150,9 @@ export class AuthService {
         username: matchedUser.username
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('❌ AuthService.validateToken - JWT verification failed:', error)
-      }
       
       // In demo mode, always return demo user even on JWT errors
       const demoUser = DEMO_USERS[0]
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 AuthService.validateToken - Using demo user fallback due to error')
-      }
       return {
         id: demoUser.id,
         email: demoUser.email,

@@ -35,10 +35,6 @@ export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 Auth validation - Token exists:', !!token)
-      console.log('🔍 Auth validation - Token length:', token?.length || 0)
-    }
     
     let user = null
     
@@ -46,9 +42,6 @@ export async function GET(request: NextRequest) {
       try {
         user = await AuthService.validateToken(token)
       } catch (tokenError) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('❌ Token validation failed, trying demo user fallback:', tokenError)
-        }
         // Fallback to demo user if token validation fails
         user = await AuthService.getOrCreateDemoUser()
       }
@@ -57,10 +50,6 @@ export async function GET(request: NextRequest) {
       user = await AuthService.getOrCreateDemoUser()
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 Auth validation - User found:', !!user)
-      console.log('🔍 Auth validation - User email:', user?.email)
-    }
     
     if (!user) {
       return NextResponse.json(
@@ -71,9 +60,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ user })
   } catch (error: any) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('❌ Auth validation error:', error)
-    }
     
     // Final fallback - return demo user even on complete failure
     try {
