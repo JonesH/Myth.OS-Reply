@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Navbar from '@/components/Navbar'
 import WaitlistForm from '@/components/WaitlistForm'
 import { 
   SparklesIcon, 
@@ -23,28 +24,7 @@ export default function WaitlistPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <SparklesIcon className="h-8 w-8 text-indigo-600 mr-2" />
-              <h1 className="text-2xl font-bold text-gray-900">MythosReply</h1>
-            </div>
-            <nav className="flex space-x-6">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">
-                Home
-              </Link>
-              <Link href="/auth/login" className="text-gray-600 hover:text-gray-900">
-                Login
-              </Link>
-              <Link href="/auth/register" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
-                Get Started
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">

@@ -7,8 +7,9 @@ Set these in your Vercel Dashboard → Settings → Environment Variables:
 ### 1. DATABASE_URL (Required)
 Use a managed Postgres instance (e.g., Neon, Supabase, Vercel Postgres):
 ```
-postgresql://USER:PASSWORD@HOST:PORT/DB_NAME?schema=public
+file:/tmp/prisma/dev.db
 ```
+**Note**: Use `/tmp/prisma/dev.db` for Vercel production (not `./prisma/dev.db`)
 
 ### 2. JWT_SECRET (Required)
 ```
@@ -52,24 +53,16 @@ your-twitter-client-id
 
 ## Important Notes:
 
-- Use Postgres in Production. SQLite is only for quick local experiments.
-- Set a strong `JWT_SECRET` even if demo mode is enabled.
-- All variables should be set for the Production environment.
-- After setting variables, redeploy your project.
-
-## Optional: Demo Mode (no auth)
-
-To showcase the app without authentication, you can enable demo mode:
-```
-DEMO_MODE=true
-NEXT_PUBLIC_DEMO_MODE=true
-```
-In demo mode, protected API routes return a mock demo user and simulate success where needed.
+- **DATABASE_URL** must start with `file:` for SQLite
+- **Use `/tmp/prisma/dev.db` for Vercel production** (not `./prisma/dev.db`)
+- **JWT_SECRET** must be set for authentication to work
+- All variables should be set for **Production** environment
+- After setting variables, redeploy your project
 
 ## Troubleshooting:
 
 If you still get DATABASE_URL errors:
-1. Confirm the Postgres connection string is valid and reachable from Vercel
-2. Check that the variable is set for the correct environment (Production/Preview/Development)
+1. Make sure DATABASE_URL is set to `file:/tmp/prisma/dev.db` (not `./prisma/dev.db`)
+2. Check that the variable is set for **Production** environment
 3. Redeploy after setting the variable
 4. Check Vercel logs for any other missing variables

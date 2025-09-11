@@ -43,19 +43,6 @@ export default function PaymentPlansPage() {
   const [enterpriseAmount, setEnterpriseAmount] = useState<number>(6000);
   const { refreshSubscriptionStatus } = useSubscription();
 
-  // Set current plan when both plans and user data are loaded
-  useEffect(() => {
-    if (plans.length > 0 && user?.subscriptionPlan) {
-      const currentPlan = plans.find(
-        (plan) => plan.id === user.subscriptionPlan,
-      );
-      if (currentPlan) {
-        setSelectedPlan(currentPlan);
-        console.log("✅ Current plan set from useEffect:", currentPlan.name);
-      }
-    }
-  }, [plans, user]);
-
   const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -84,6 +71,19 @@ export default function PaymentPlansPage() {
     fetchPlans();
     checkAuth();
   }, [checkAuth]);
+
+  // Set current plan when both plans and user data are loaded
+  useEffect(() => {
+    if (plans.length > 0 && user?.subscriptionPlan) {
+      const currentPlan = plans.find(
+        (plan) => plan.id === user.subscriptionPlan,
+      );
+      if (currentPlan) {
+        setSelectedPlan(currentPlan);
+        console.log("✅ Current plan set from useEffect:", currentPlan.name);
+      }
+    }
+  }, [plans, user]);
 
   const fetchPlans = async () => {
     console.log("🔄 Fetching plans...");
