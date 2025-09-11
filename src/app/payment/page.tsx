@@ -65,23 +65,7 @@ export default function PaymentPlansPage() {
     }
   }, [router]);
 
-  useEffect(() => {
-    fetchPlans();
-    checkAuth();
-  }, [checkAuth]);
-
-  // Set current plan when both plans and subscription status are loaded
-  useEffect(() => {
-    if (plans.length > 0 && subscriptionStatus?.plan) {
-      const currentPlan = plans.find(plan => plan.id === subscriptionStatus.plan)
-      if (currentPlan) {
-        setSelectedPlan(currentPlan)
-        console.log('✅ Current plan set from subscription context:', currentPlan.name)
-      }
-    }
-  }, [plans, subscriptionStatus])
-
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     console.log("🔄 Fetching plans...");
     try {
       const response = await fetch("/api/subscriptions/plans");
@@ -99,7 +83,23 @@ export default function PaymentPlansPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPlans();
+    checkAuth();
+  }, [fetchPlans, checkAuth]);
+
+  // Set current plan when both plans and subscription status are loaded
+  useEffect(() => {
+    if (plans.length > 0 && subscriptionStatus?.plan) {
+      const currentPlan = plans.find(plan => plan.id === subscriptionStatus.plan)
+      if (currentPlan) {
+        setSelectedPlan(currentPlan)
+        console.log('✅ Current plan set from subscription context:', currentPlan.name)
+      }
+    }
+  }, [plans, subscriptionStatus])
 
   const selectPlan = async (plan: Plan) => {
     console.log('🔄 Selecting plan:', plan)

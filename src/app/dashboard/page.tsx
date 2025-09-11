@@ -86,9 +86,9 @@ export default function Dashboard() {
     }
 
     checkAuth()
-  }, [router])
+  }, [router, loadData])
 
-  const loadData = async (token: string) => {
+  const loadData = useCallback(async (token: string) => {
     try {
       // Load Twitter accounts
       const accountsResponse = await fetch('/api/twitter/accounts', {
@@ -114,7 +114,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error loading data:', error)
     }
-  }
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('token')

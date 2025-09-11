@@ -5,9 +5,11 @@ import { prisma } from '@/lib/database'
 
 export const dynamic = 'force-dynamic'
 
-// Check if demo mode is enabled
-const isDemoMode = () => {
-  return process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+// Check if demo mode is enabled for Twitter OAuth specifically
+const isTwitterOAuthDemoMode = () => {
+  // Only use demo mode if explicitly disabled or if Twitter API credentials are missing
+  const hasTwitterCredentials = process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET
+  return !hasTwitterCredentials || process.env.TWITTER_OAUTH_DEMO_MODE === 'true'
 }
 
 /**
@@ -120,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     // In demo mode, return mock account data
-    if (isDemoMode()) {
+    if (isTwitterOAuthDemoMode()) {
       const mockAccount = {
         id: `demo-twitter-account-${Date.now()}`,
         twitterUsername: screenName,

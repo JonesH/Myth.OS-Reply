@@ -2,9 +2,12 @@ import { TwitterService } from './twitter'
 import { prisma } from '@/lib/database'
 import crypto from 'crypto'
 
-// Check if demo mode is enabled
-const isDemoMode = () => {
-  return process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+// Check if demo mode is enabled for Twitter OAuth specifically
+// We want to use real Twitter OAuth even in demo mode for authentication
+const isTwitterOAuthDemoMode = () => {
+  // Only use demo mode if explicitly disabled or if Twitter API credentials are missing
+  const hasTwitterCredentials = process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET
+  return !hasTwitterCredentials || process.env.TWITTER_OAUTH_DEMO_MODE === 'true'
 }
 
 // Demo OAuth state storage (in-memory for demo)
@@ -43,7 +46,7 @@ export class TwitterOAuthService {
     state: string
   }> {
     // In demo mode, return mock authorization URL
-    if (isDemoMode()) {
+    if (isTwitterOAuthDemoMode()) {
       const state = crypto.randomBytes(32).toString('hex')
       const mockRequestToken = 'demo_oauth_token_' + Date.now()
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
@@ -113,7 +116,7 @@ export class TwitterOAuthService {
     twitterUserId: string
   }> {
     // In demo mode, return mock access tokens
-    if (isDemoMode()) {
+    if (isTwitterOAuthDemoMode()) {
       cleanupDemoStates()
       const oauthState = demoOAuthStates.get(state)
       
