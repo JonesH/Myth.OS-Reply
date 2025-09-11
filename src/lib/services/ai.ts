@@ -148,6 +148,7 @@ export class AIService {
     const response = await generateText({
       model: model as any,
       prompt,
+      maxOutputTokens: 500,
       temperature: 0.7
     })
     
