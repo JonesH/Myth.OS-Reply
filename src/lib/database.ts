@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client'
+import { existsSync, mkdirSync } from 'fs'
+import { dirname } from 'path'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -14,6 +16,27 @@ const getDatabaseUrl = () => {
     return 'file:./prisma/dev.db'
   }
 }
+
+// Ensure database directory exists
+const ensureDatabaseDirectory = () => {
+  const dbUrl = getDatabaseUrl()
+  if (dbUrl.startsWith('file:')) {
+    const dbPath = dbUrl.replace('file:', '')
+    const dbDir = dirname(dbPath)
+    
+    if (!existsSync(dbDir)) {
+      try {
+        mkdirSync(dbDir, { recursive: true })
+        console.log(`✅ Created database directory: ${dbDir}`)
+      } catch (error) {
+        console.error(`❌ Failed to create database directory: ${dbDir}`, error)
+      }
+    }
+  }
+}
+
+// Ensure database directory exists before creating Prisma client
+ensureDatabaseDirectory()
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
