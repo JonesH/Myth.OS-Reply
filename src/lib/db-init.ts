@@ -80,6 +80,52 @@ export const initializeDatabase = async (prisma: PrismaClient) => {
           )
         `
         
+        // Create twitter_accounts table
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "twitter_accounts" (
+            "id" TEXT NOT NULL PRIMARY KEY,
+            "userId" TEXT NOT NULL,
+            "twitterUsername" TEXT NOT NULL,
+            "accessToken" TEXT NOT NULL,
+            "accessTokenSecret" TEXT NOT NULL,
+            "isActive" BOOLEAN NOT NULL DEFAULT true,
+            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE,
+            UNIQUE("userId", "twitterUsername")
+          )
+        `
+        
+        // Create oauth_states table
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "oauth_states" (
+            "id" TEXT NOT NULL PRIMARY KEY,
+            "userId" TEXT NOT NULL,
+            "state" TEXT NOT NULL UNIQUE,
+            "requestToken" TEXT NOT NULL,
+            "requestSecret" TEXT NOT NULL,
+            "callbackUrl" TEXT,
+            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "expiresAt" DATETIME NOT NULL,
+            FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
+          )
+        `
+        
+        // Create reply_jobs table
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "reply_jobs" (
+            "id" TEXT NOT NULL PRIMARY KEY,
+            "userId" TEXT NOT NULL,
+            "targetUsernames" TEXT NOT NULL,
+            "keywords" TEXT,
+            "replyTemplate" TEXT NOT NULL,
+            "isActive" BOOLEAN NOT NULL DEFAULT true,
+            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
+          )
+        `
+        
         console.log('✅ Database tables created successfully')
         return true
       } catch (createError) {
