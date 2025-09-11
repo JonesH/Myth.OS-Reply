@@ -20,11 +20,17 @@ const demoOAuthStates = new Map<string, {
 // Cleanup expired demo states
 const cleanupDemoStates = () => {
   const now = new Date()
-  for (const [key, value] of demoOAuthStates.entries()) {
+  const keysToDelete: string[] = []
+  
+  demoOAuthStates.forEach((value, key) => {
     if (value.expiresAt < now) {
-      demoOAuthStates.delete(key)
+      keysToDelete.push(key)
     }
-  }
+  })
+  
+  keysToDelete.forEach(key => {
+    demoOAuthStates.delete(key)
+  })
 }
 
 export class TwitterOAuthService {
