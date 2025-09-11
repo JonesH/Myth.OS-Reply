@@ -5,9 +5,21 @@ import crypto from 'crypto'
 // Check if demo mode is enabled for Twitter OAuth specifically
 // We want to use real Twitter OAuth even in demo mode for authentication
 const isTwitterOAuthDemoMode = () => {
-  // Only use demo mode if explicitly disabled or if Twitter API credentials are missing
-  const hasTwitterCredentials = process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET
-  return !hasTwitterCredentials || process.env.TWITTER_OAUTH_DEMO_MODE === 'true'
+  // Check if we have OAuth credentials
+  const hasTwitterOAuthCredentials = process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET
+  
+  // Use demo mode if:
+  // 1. We don't have OAuth credentials OR
+  // 2. Demo mode is explicitly enabled
+  if (!hasTwitterOAuthCredentials) {
+    return true // No credentials, use demo mode
+  }
+  
+  if (process.env.TWITTER_OAUTH_DEMO_MODE === 'true') {
+    return true // Demo mode explicitly enabled
+  }
+  
+  return false // We have credentials and demo mode is not enabled, use real OAuth
 }
 
 // Demo OAuth state storage (in-memory for demo)
