@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/database'
+// Removed prisma import - using demo mode only
 import { AuthService } from '@/lib/services/auth'
 
 export const dynamic = 'force-dynamic'
@@ -42,56 +42,35 @@ export const dynamic = 'force-dynamic'
  *       500:
  *         description: Internal server error
  */
+// Demo subscription data
+const DEMO_SUBSCRIPTION_DATA = {
+  plan: 'premium',
+  status: 'active',
+  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+  dailyLimit: 500,
+  repliesUsedToday: 47,
+  daysUntilExpiry: 30,
+  canUpgrade: false,
+  walletAddress: '0x1234...demo'
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
+    
+    // Always return demo user in demo mode
+    const user = token 
+      ? await AuthService.validateToken(token)
+      : await AuthService.getOrCreateDemoUser()
+      
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.substring(7)
-    const user = await AuthService.validateToken(token)
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: {
-        subscriptions: {
-          where: { status: 'active' },
-          orderBy: { createdAt: 'desc' },
-          take: 1
-        }
-      }
-    })
-
-    if (!dbUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Calculate days until expiry
-    let daysUntilExpiry = null
-    if (dbUser.subscriptionExpiresAt) {
-      const now = new Date()
-      const expiry = new Date(dbUser.subscriptionExpiresAt)
-      const diffTime = expiry.getTime() - now.getTime()
-      daysUntilExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    }
-
-    // Check if user can upgrade
-    const canUpgrade = dbUser.subscriptionPlan !== 'premium'
-
-    return NextResponse.json({
-      plan: dbUser.subscriptionPlan,
-      status: dbUser.subscriptionStatus,
-      expiresAt: dbUser.subscriptionExpiresAt,
-      dailyLimit: dbUser.dailyReplyLimit,
-      repliesUsedToday: dbUser.repliesUsedToday,
-      daysUntilExpiry,
-      canUpgrade,
-      walletAddress: dbUser.walletAddress
-    })
+    // Return demo subscription data
+    return NextResponse.json(DEMO_SUBSCRIPTION_DATA)
+    
   } catch (error) {
     console.error('Error fetching subscription status:', error)
     return NextResponse.json(
