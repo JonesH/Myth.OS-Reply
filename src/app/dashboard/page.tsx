@@ -129,6 +129,34 @@ export default function Dashboard() {
     }
   }
 
+  const disconnectTwitterAccount = async (accountId: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Please log in to disconnect accounts')
+        return
+      }
+
+      const response = await fetch(`/api/twitter/accounts?id=${accountId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        toast.success('Twitter account disconnected successfully!')
+        await refreshData() // Refresh the data to update the UI
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to disconnect account')
+      }
+    } catch (error) {
+      console.error('Error disconnecting Twitter account:', error)
+      toast.error('Failed to disconnect account')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-hero-gradient flex items-center justify-center">
@@ -307,12 +335,23 @@ export default function Dashboard() {
                           Added {new Date(account.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className={`px-2 py-1 rounded-full text-xs ${
-                        account.isActive 
-                          ? 'bg-accent-100 text-accent-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {account.isActive ? 'Active' : 'Inactive'}
+                      <div className="flex items-center space-x-2">
+                        <div className={`px-2 py-1 rounded-full text-xs ${
+                          account.isActive 
+                            ? 'bg-accent-100 text-accent-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {account.isActive ? 'Active' : 'Inactive'}
+                        </div>
+                        <button
+                          onClick={() => disconnectTwitterAccount(account.id)}
+                          className="text-red-500 hover:text-red-700 p-1 rounded-md hover:bg-red-50 transition-colors"
+                          title="Disconnect account"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   </div>

@@ -127,3 +127,46 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = await getAuthUser(request)
+    const { searchParams } = new URL(request.url)
+    const accountId = searchParams.get('id')
+
+    if (!accountId) {
+      return NextResponse.json(
+        { error: 'Account ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // In demo mode, just return success
+    if (process.env.DEMO_MODE === 'true') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Twitter account disconnected successfully' 
+      })
+    }
+
+    // Delete the Twitter account from database
+    await prisma.twitterAccount.delete({
+      where: {
+        id: accountId,
+        userId: user.id // Ensure user can only delete their own accounts
+      }
+    })
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Twitter account disconnected successfully' 
+    })
+    
+  } catch (error: any) {
+    console.error('Error disconnecting Twitter account:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

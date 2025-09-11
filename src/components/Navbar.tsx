@@ -141,10 +141,9 @@ export default function Navbar() {
           <div className="lg:hidden flex items-center">
             <button 
               onClick={() => {
-                if (process.env.NODE_ENV === 'development') {
-                  console.log('🍔 Mobile menu button clicked, current state:', mobileMenuOpen)
-                }
+                console.log('🍔 Mobile menu button clicked, current state:', mobileMenuOpen)
                 setMobileMenuOpen(!mobileMenuOpen)
+                console.log('🍔 Mobile menu state after toggle:', !mobileMenuOpen)
               }}
               className="p-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Toggle mobile menu"
