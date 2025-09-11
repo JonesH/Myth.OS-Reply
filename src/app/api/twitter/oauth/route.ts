@@ -5,6 +5,11 @@ import { prisma } from '@/lib/database'
 
 export const dynamic = 'force-dynamic'
 
+// Check if demo mode is enabled
+const isDemoMode = () => {
+  return process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+}
+
 /**
  * @swagger
  * /api/twitter/oauth:
@@ -112,6 +117,17 @@ export async function POST(request: NextRequest) {
         { error: 'User mismatch in OAuth flow' },
         { status: 400 }
       )
+    }
+
+    // In demo mode, return mock account data
+    if (isDemoMode()) {
+      const mockAccount = {
+        id: `demo-twitter-account-${Date.now()}`,
+        twitterUsername: screenName,
+        isActive: true,
+        createdAt: new Date().toISOString()
+      }
+      return NextResponse.json(mockAccount, { status: 201 })
     }
 
     // Store the Twitter account

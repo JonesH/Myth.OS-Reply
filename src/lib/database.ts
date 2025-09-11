@@ -47,8 +47,13 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   }
 })
 
-// Initialize database tables if they don't exist (only in production)
-if (process.env.NODE_ENV === 'production') {
+// Check if demo mode is enabled
+const isDemoMode = () => {
+  return process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+}
+
+// Initialize database tables if they don't exist (only in production and not in demo mode)
+if (process.env.NODE_ENV === 'production' && !isDemoMode()) {
   initializeDatabase(prisma).catch(console.error)
 }
 

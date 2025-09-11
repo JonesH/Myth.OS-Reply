@@ -16,12 +16,19 @@ file:/tmp/prisma/dev.db
 your-super-secret-jwt-key-here-make-it-long-and-random
 ```
 
-### 3. NEXTAUTH_SECRET (Optional - for compatibility)
+### 3. Demo Mode Variables (Required for deployment)
+Enable demo mode to run without database:
+```
+DEMO_MODE=true
+NEXT_PUBLIC_DEMO_MODE=true
+```
+
+### 5. NEXTAUTH_SECRET (Optional - for compatibility)
 ```
 your-nextauth-secret-key-here
 ```
 
-### 4. NEXTAUTH_URL (Optional - for compatibility)
+### 6. NEXTAUTH_URL (Optional - for compatibility)
 ```
 https://your-domain.vercel.app
 ```
@@ -53,11 +60,26 @@ your-twitter-client-id
 
 ## Important Notes:
 
-- **DATABASE_URL** must start with `file:` for SQLite
+- **Demo Mode** is recommended for deployment - no database setup required
+- **DATABASE_URL** must start with `file:` for SQLite (only needed if demo mode disabled)
 - **Use `/tmp/prisma/dev.db` for Vercel production** (not `./prisma/dev.db`)
 - **JWT_SECRET** must be set for authentication to work
+- **DEMO_MODE and NEXT_PUBLIC_DEMO_MODE** should both be set to `true` for deployment
 - All variables should be set for **Production** environment
 - After setting variables, redeploy your project
+
+## Demo Mode vs Database Mode
+
+**Demo Mode (Recommended for deployment):**
+- Set `DEMO_MODE=true` and `NEXT_PUBLIC_DEMO_MODE=true`
+- No database setup required
+- Uses in-memory demo data
+- Perfect for showcasing functionality
+
+**Database Mode (Development/Production with real data):**
+- Set `DEMO_MODE=false` or omit the variable
+- Requires proper DATABASE_URL configuration
+- Uses real database with Prisma
 
 ## Troubleshooting:
 

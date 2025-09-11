@@ -48,21 +48,6 @@ export const initializeDatabase = async (prisma: PrismaClient) => {
           )
         `
         
-        // Create reply_jobs table
-        await prisma.$executeRaw`
-          CREATE TABLE IF NOT EXISTS "reply_jobs" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "userId" TEXT NOT NULL,
-            "targetUsernames" TEXT NOT NULL,
-            "keywords" TEXT,
-            "replyTemplate" TEXT NOT NULL,
-            "isActive" BOOLEAN NOT NULL DEFAULT true,
-            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
-          )
-        `
-        
         // Create waitlist table
         await prisma.$executeRaw`
           CREATE TABLE IF NOT EXISTS "waitlist" (
@@ -107,21 +92,6 @@ export const initializeDatabase = async (prisma: PrismaClient) => {
             "callbackUrl" TEXT,
             "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             "expiresAt" DATETIME NOT NULL,
-            FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
-          )
-        `
-        
-        // Create reply_jobs table
-        await prisma.$executeRaw`
-          CREATE TABLE IF NOT EXISTS "reply_jobs" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "userId" TEXT NOT NULL,
-            "targetUsernames" TEXT NOT NULL,
-            "keywords" TEXT,
-            "replyTemplate" TEXT NOT NULL,
-            "isActive" BOOLEAN NOT NULL DEFAULT true,
-            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
           )
         `
