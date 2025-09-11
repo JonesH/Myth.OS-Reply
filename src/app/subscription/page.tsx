@@ -13,8 +13,33 @@ export default function SimpleSubscriptionPage() {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('❌ Subscription page - No token found, redirecting to login')
+        }
         router.push('/auth/login')
         return
+      }
+
+      // Validate token with server
+      const response = await fetch('/api/auth/validate', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Subscription page - Auth validation response:', response.status)
+      }
+
+      if (!response.ok) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('❌ Subscription page - Token invalid, redirecting to login')
+        }
+        localStorage.removeItem('token')
+        router.push('/auth/login')
+        return
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Subscription page - Auth successful')
       }
       setLoading(false)
     } catch (error) {
