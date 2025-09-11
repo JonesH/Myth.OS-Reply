@@ -52,6 +52,34 @@ export default function Dashboard() {
   const router = useRouter()
   const { subscriptionStatus } = useSubscription()
 
+  const loadData = useCallback(async (token: string) => {
+    try {
+      // Load Twitter accounts
+      const accountsResponse = await fetch('/api/twitter/accounts', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (accountsResponse.ok) {
+        const accounts = await accountsResponse.json()
+        setTwitterAccounts(accounts)
+      }
+
+      // Load reply jobs
+      const jobsResponse = await fetch('/api/reply-jobs', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (jobsResponse.ok) {
+        const jobs = await jobsResponse.json()
+        setReplyJobs(jobs)
+      }
+    } catch (error) {
+      console.error('Error loading data:', error)
+    }
+  }, [])
+
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token')
@@ -87,34 +115,6 @@ export default function Dashboard() {
 
     checkAuth()
   }, [router, loadData])
-
-  const loadData = useCallback(async (token: string) => {
-    try {
-      // Load Twitter accounts
-      const accountsResponse = await fetch('/api/twitter/accounts', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      if (accountsResponse.ok) {
-        const accounts = await accountsResponse.json()
-        setTwitterAccounts(accounts)
-      }
-
-      // Load reply jobs
-      const jobsResponse = await fetch('/api/reply-jobs', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      if (jobsResponse.ok) {
-        const jobs = await jobsResponse.json()
-        setReplyJobs(jobs)
-      }
-    } catch (error) {
-      console.error('Error loading data:', error)
-    }
-  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
