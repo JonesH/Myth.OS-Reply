@@ -2,11 +2,6 @@
   "buildCommand": "prisma migrate deploy && prisma generate && next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  },
   "env": {
     "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK": "1"
   },
