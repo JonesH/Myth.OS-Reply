@@ -2,7 +2,14 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/database'
 
-const getJWTSecret = () => process.env.JWT_SECRET || 'your-secret-key'
+const getJWTSecret = () => {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    console.error('❌ JWT_SECRET environment variable is not set!')
+    throw new Error('JWT_SECRET environment variable is required')
+  }
+  return secret
+}
 
 export interface AuthUser {
   id: string
