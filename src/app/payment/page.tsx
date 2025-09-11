@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
@@ -43,7 +43,7 @@ export default function PaymentPlansPage() {
   useEffect(() => {
     fetchPlans()
     checkAuth()
-  }, [])
+  }, [checkAuth])
 
   // Set current plan when both plans and user data are loaded
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function PaymentPlansPage() {
     }
   }, [plans, user])
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -78,7 +78,7 @@ export default function PaymentPlansPage() {
       console.error('Auth check failed:', error)
       router.push('/auth/login')
     }
-  }
+  }, [router])
 
   const fetchPlans = async () => {
     console.log('🔄 Fetching plans...')
