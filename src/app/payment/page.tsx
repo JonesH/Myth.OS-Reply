@@ -38,7 +38,7 @@ export default function PaymentPlansPage() {
   const [generatingAddress, setGeneratingAddress] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [enterpriseAmount, setEnterpriseAmount] = useState<number>(6000)
-  const { refreshSubscriptionStatus } = useSubscription()
+  const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription()
 
   const checkAuth = useCallback(async () => {
     try {
@@ -69,16 +69,16 @@ export default function PaymentPlansPage() {
     checkAuth()
   }, [checkAuth])
 
-  // Set current plan when both plans and user data are loaded
+  // Set current plan when both plans and subscription status are loaded
   useEffect(() => {
-    if (plans.length > 0 && user?.subscriptionPlan) {
-      const currentPlan = plans.find(plan => plan.id === user.subscriptionPlan)
+    if (plans.length > 0 && subscriptionStatus?.plan) {
+      const currentPlan = plans.find(plan => plan.id === subscriptionStatus.plan)
       if (currentPlan) {
         setSelectedPlan(currentPlan)
-        console.log('✅ Current plan set from useEffect:', currentPlan.name)
+        console.log('✅ Current plan set from subscription context:', currentPlan.name)
       }
     }
-  }, [plans, user])
+  }, [plans, subscriptionStatus])
 
   const fetchPlans = async () => {
     console.log('🔄 Fetching plans...')
@@ -100,8 +100,55 @@ export default function PaymentPlansPage() {
     }
   }
 
+  const selectPlan = async (plan: Plan) => {
+    console.log('🔄 Selecting plan:', plan)
+    setGeneratingAddress(true)
+    try {
+      const token = localStorage.getItem('token')
+      console.log('📝 Token exists:', !!token)
+      
+      if (!token) {
+        alert('Please log in to select a plan')
+        return
+      }
+
+      // Update the subscription immediately
+      const updateResponse = await fetch('/api/subscriptions/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          plan: plan.id
+        })
+      })
+
+      console.log('📡 Update response status:', updateResponse.status)
+      
+      if (updateResponse.ok) {
+        console.log('✅ Subscription updated successfully')
+        
+        setSelectedPlan(plan)
+        alert(`✅ ${plan.name} plan activated successfully!`)
+        
+        // Refresh subscription status across the app
+        await refreshSubscriptionStatus()
+      } else {
+        const error = await updateResponse.json()
+        console.error('❌ Error updating subscription:', error)
+        alert(`Error: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('❌ Error updating subscription:', error)
+      alert('Error updating subscription')
+    } finally {
+      setGeneratingAddress(false)
+    }
+  }
+
   const generatePaymentAddress = async (plan: Plan) => {
-    console.log('🔄 Updating subscription for plan:', plan)
+    console.log('🔄 Generating payment address for plan:', plan)
     setGeneratingAddress(true)
     try {
       const token = localStorage.getItem('token')
@@ -403,25 +450,23 @@ export default function PaymentPlansPage() {
             )}
 
             <button
-              onClick={() => generatePaymentAddress(plan)}
-              disabled={generatingAddress || plan.id === 'free'}
+              onClick={() => plan.id === 'free' ? selectPlan(plan) : generatePaymentAddress(plan)}
+              disabled={generatingAddress}
               className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
-                plan.id === 'free'
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : selectedPlan?.id === plan.id
+                selectedPlan?.id === plan.id
                   ? 'bg-green-600 hover:bg-green-700 text-white'
                   : plan.popular
                   ? 'bg-blue-600 hover:bg-blue-700 text-white'
                   : 'bg-gray-600 hover:bg-gray-700 text-white'
               }`}
             >
-              {user?.subscriptionPlan === plan.id
+              {subscriptionStatus?.plan === plan.id
                 ? 'Current Plan'
                 : selectedPlan?.id === plan.id 
                 ? 'Activated'  
                 : generatingAddress 
                 ? 'Activating...'
-                : 'Activate Plan'}
+                : plan.id === 'free' ? 'Select Free Plan' : 'Activate Plan'}
             </button>
           </div>
         ))}
