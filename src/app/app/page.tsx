@@ -1,12 +1,12 @@
 "use client";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import { useState } from "react";
 import TwitterConnectButton from "@/components/TwitterConnectButton";
 import Image from "next/image";
 import TwitterProfileTracker from "@/components/TwitterProfileTracker";
 
 export default function AppPage() {
-  const { data: session, status } = useSession();
+  // const { data: session, status } = useSession();
   const [tweetText, setTweetText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [message, setMessage] = useState("");
@@ -16,6 +16,10 @@ export default function AppPage() {
   const [targetingPrompt, setTargetingPrompt] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
+
+  // Mock session for now - NextAuth disabled
+  const session = null;
+  const status = "unauthenticated";
 
   // Add comprehensive logging
   console.log('🔍 App Page - Session status:', status);
