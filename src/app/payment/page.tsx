@@ -18,6 +18,9 @@ interface Plan {
   features: string[]
   popular: boolean
   description: string
+  minPrice?: number
+  maxPrice?: number
+  isEnterprise?: boolean
 }
 
 interface PaymentAddress {
@@ -34,6 +37,7 @@ export default function PaymentPlansPage() {
   const [loading, setLoading] = useState(true)
   const [generatingAddress, setGeneratingAddress] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [enterpriseAmount, setEnterpriseAmount] = useState<number>(6000)
   const { refreshSubscriptionStatus } = useSubscription()
 
   useEffect(() => {
@@ -100,7 +104,7 @@ export default function PaymentPlansPage() {
         },
         body: JSON.stringify({
           plan: plan.id,
-          amount: plan.price
+          amount: plan.isEnterprise ? enterpriseAmount : plan.price
         })
       })
 
@@ -218,7 +222,11 @@ export default function PaymentPlansPage() {
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">Automation Features</td>
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
-                    {plan.id === 'free' ? '❌ Limited' : '✅ Full'}
+                    {plan.id === 'free' ? (
+                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                    ) : (
+                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                    )}
                   </td>
                 ))}
               </tr>
@@ -226,7 +234,13 @@ export default function PaymentPlansPage() {
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">Analytics</td>
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
-                    {plan.id === 'free' ? '❌ Basic' : plan.id === 'basic' ? '✅ Standard' : '✅ Advanced'}
+                    {plan.id === 'free' ? (
+                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                    ) : plan.id === 'basic' ? (
+                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                    ) : (
+                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                    )}
                   </td>
                 ))}
               </tr>
@@ -234,7 +248,11 @@ export default function PaymentPlansPage() {
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">Custom Instructions</td>
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
-                    {plan.id === 'premium' ? '✅ Yes' : '❌ No'}
+                    {plan.id === 'premium' || plan.id === 'enterprise' ? (
+                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                    ) : (
+                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                    )}
                   </td>
                 ))}
               </tr>
@@ -242,7 +260,11 @@ export default function PaymentPlansPage() {
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">Support</td>
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-6 py-4 text-center text-sm text-gray-900">
-                    {plan.id === 'free' ? '❌ Community' : '✅ Email'}
+                    {plan.id === 'free' ? (
+                      <img src="/assets/symbols/remove.png" alt="No" className="w-4 h-4 mx-auto" />
+                    ) : (
+                      <img src="/assets/symbols/check.png" alt="Yes" className="w-4 h-4 mx-auto" />
+                    )}
                   </td>
                 ))}
               </tr>
@@ -273,7 +295,16 @@ export default function PaymentPlansPage() {
                 {plan.name}
               </h3>
               <div className="text-4xl font-bold text-gray-900 mb-2">
-                {plan.price} {plan.currency}
+                {plan.isEnterprise ? (
+                  <div className="space-y-2">
+                    <div>Custom Pricing</div>
+                    <div className="text-lg text-gray-600">
+                      {plan.minPrice} - {plan.maxPrice} {plan.currency}
+                    </div>
+                  </div>
+                ) : (
+                  `${plan.price} ${plan.currency}`
+                )}
               </div>
               <p className="text-gray-600">{plan.description}</p>
             </div>
@@ -281,13 +312,32 @@ export default function PaymentPlansPage() {
             <ul className="space-y-3 mb-8">
               {plan.features.map((feature, index) => (
                 <li key={index} className="flex items-center text-sm text-gray-700">
-                  <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                  <img src="/assets/symbols/check.png" alt="Feature" className="w-5 h-5 mr-3" />
                   {feature}
                 </li>
               ))}
             </ul>
+
+            {/* Enterprise Amount Input */}
+            {plan.isEnterprise && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Custom Amount (THETA)
+                </label>
+                <input
+                  type="number"
+                  min={plan.minPrice}
+                  max={plan.maxPrice}
+                  value={enterpriseAmount}
+                  onChange={(e) => setEnterpriseAmount(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={`${plan.minPrice} - ${plan.maxPrice}`}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Range: {plan.minPrice} - {plan.maxPrice} THETA
+                </p>
+              </div>
+            )}
 
             <button
               onClick={() => generatePaymentAddress(plan)}
@@ -305,7 +355,7 @@ export default function PaymentPlansPage() {
               {plan.id === 'free' 
                 ? 'Current Plan' 
                 : selectedPlan?.id === plan.id 
-                ? 'Selected ✓' 
+                ? 'Selected'  
                 : generatingAddress 
                 ? 'Generating...' 
                 : 'Select Plan'}

@@ -12,23 +12,24 @@ export interface AIProviderConfig {
 }
 
 export function createAIProvider(): AIProviderConfig {
-  const useEdgeCloud = process.env.USE_EDGECLOUD === 'true'
+  const useOpenRouter = process.env.USE_OPENROUTER === 'true'
   
-  if (useEdgeCloud) {
-    if (!process.env.EDGECLOUD_API_KEY) {
-      throw new Error('EDGECLOUD_API_KEY is required when USE_EDGECLOUD=true')
-    }
-    return {
-      type: 'edgecloud',
-      config: { apiKey: process.env.EDGECLOUD_API_KEY }
-    }
-  } else {
+  if (useOpenRouter) {
     if (!process.env.OPENROUTER_API_KEY) {
-      throw new Error('OPENROUTER_API_KEY is required')
+      throw new Error('OPENROUTER_API_KEY is required when USE_OPENROUTER=true')
     }
     return {
       type: 'openrouter', 
       config: { apiKey: process.env.OPENROUTER_API_KEY }
+    }
+  } else {
+    // Default to EdgeCloud
+    if (!process.env.EDGECLOUD_API_KEY) {
+      console.warn('EDGECLOUD_API_KEY not found, using default EdgeCloud configuration')
+    }
+    return {
+      type: 'edgecloud',
+      config: { apiKey: process.env.EDGECLOUD_API_KEY || 'default' }
     }
   }
 }

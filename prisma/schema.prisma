@@ -17,7 +17,7 @@ model User {
   updatedAt     DateTime @updatedAt
 
   // Subscription fields
-  subscriptionPlan    String   @default("free") // free, basic, premium
+  subscriptionPlan    String   @default("free") // free, basic, premium, enterprise
   subscriptionStatus  String   @default("active") // active, expired, cancelled
   subscriptionExpiresAt DateTime?
   dailyReplyLimit     Int      @default(10) // Current daily limit based on plan

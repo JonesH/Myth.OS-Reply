@@ -136,7 +136,9 @@ export async function POST(request: NextRequest) {
         subscriptionPlan: paymentAddress.plan,
         subscriptionStatus: 'active',
         subscriptionExpiresAt: subscriptionEndDate,
-        dailyReplyLimit: paymentAddress.plan === 'basic' ? 50 : 500
+        dailyReplyLimit: paymentAddress.plan === 'basic' ? 50 : 
+                        paymentAddress.plan === 'premium' ? 500 : 
+                        paymentAddress.plan === 'enterprise' ? 5000 : 10
       }
     })
 

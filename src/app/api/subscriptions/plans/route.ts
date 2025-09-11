@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       {
         id: 'basic',
         name: 'Basic',
-        price: 1,
+        price: 90,
         currency: 'THETA',
         dailyLimit: 50,
         features: [
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       {
         id: 'premium',
         name: 'Premium',
-        price: 5,
+        price: 240,
         currency: 'THETA',
         dailyLimit: 500,
         features: [
@@ -88,6 +88,29 @@ export async function GET(request: NextRequest) {
         ],
         popular: false,
         description: 'For power users and businesses'
+      },
+      {
+        id: 'enterprise',
+        name: 'Enterprise',
+        price: 6000,
+        currency: 'THETA',
+        minPrice: 6000,
+        maxPrice: 20000,
+        dailyLimit: 5000,
+        features: [
+          '5000+ AI replies per day',
+          'Premium AI models',
+          'Custom AI instructions',
+          'Advanced analytics and insights',
+          'Priority support features',
+          'Custom integrations',
+          'Dedicated account manager',
+          'Custom API access',
+          'White-label solutions'
+        ],
+        popular: false,
+        description: 'For large enterprises and organizations',
+        isEnterprise: true
       }
     ]
 
