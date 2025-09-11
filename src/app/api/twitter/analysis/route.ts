@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { TwitterAnalysisService } from '@/lib/services/twitterAnalysis'
 import { prisma } from '@/lib/database'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -107,6 +108,35 @@ export async function GET(request: NextRequest) {
             { status: 400 }
           )
         }
+
+        if (isNoDatabaseMode()) {
+          // Return mock profile data for demo mode
+          return NextResponse.json({
+            type: 'profile',
+            data: {
+              id: 'demo_profile_1',
+              username,
+              userId: 'demo_user',
+              displayName: `Demo User @${username}`,
+              bio: 'This is a demo profile for testing purposes.',
+              followersCount: 12500,
+              followingCount: 890,
+              tweetCount: 3420,
+              listedCount: 45,
+              verified: false,
+              avgLikesPerTweet: 23.5,
+              avgRepliesPerTweet: 4.2,
+              avgRetweetsPerTweet: 8.7,
+              engagementRate: 0.034,
+              mostActiveHours: [9, 12, 15, 18],
+              postingFrequency: 2.3,
+              topTopics: ['technology', 'startups', 'AI', 'programming'],
+              sentimentTrend: [0.2, 0.3, 0.1, 0.4, 0.25],
+              lastUpdated: new Date()
+            }
+          })
+        }
+
         const profileData = await prisma.profileAnalytics.findUnique({
           where: { username }
         })
@@ -130,6 +160,25 @@ export async function GET(request: NextRequest) {
 
       case 'overview':
         // General overview of all scraped data
+        if (isNoDatabaseMode()) {
+          // Return mock data for demo mode
+          return NextResponse.json({
+            type: 'overview',
+            data: {
+              totalTweets: 1250,
+              recentTweets: 85,
+              averageSentiment: 0.23,
+              topProfiles: [
+                { username: 'elonmusk', tweetCount: 45 },
+                { username: 'sundarpichai', tweetCount: 32 },
+                { username: 'satyanadella', tweetCount: 28 },
+                { username: 'tim_cook', tweetCount: 21 },
+                { username: 'jeffbezos', tweetCount: 18 }
+              ]
+            }
+          })
+        }
+
         const totalTweets = await prisma.scrapedTweet.count()
         const recentTweets = await prisma.scrapedTweet.count({
           where: {

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/database'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export interface UsageLimit {
   canUseFeature: boolean
@@ -118,6 +119,28 @@ export class UsageTrackingService {
    * Get usage statistics for a user
    */
   static async getUserUsageStats(userId: string, days: number = 30) {
+    if (isNoDatabaseMode()) {
+      // Return mock data for demo mode
+      return {
+        currentPlan: 'free',
+        dailyLimit: 10,
+        repliesUsedToday: 3,
+        usageHistory: [
+          {
+            id: 'demo_1',
+            userId,
+            date: new Date(),
+            repliesUsed: 3,
+            aiGenerations: 2,
+            featuresUsed: null,
+            createdAt: new Date()
+          }
+        ],
+        totalRepliesUsed: 3,
+        totalAiGenerations: 2
+      }
+    }
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 
