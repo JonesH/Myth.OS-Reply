@@ -13,6 +13,20 @@ export class UsageTrackingService {
    * Check if user can use a feature based on their subscription and daily limits
    */
   static async checkUsageLimit(userId: string, feature: 'reply' | 'ai_generation'): Promise<UsageLimit> {
+    if (isNoDatabaseMode()) {
+      const dailyLimit = feature === 'reply' ? 10 : 10
+      const remainingUsage = dailyLimit
+      const resetTime = new Date()
+      resetTime.setDate(resetTime.getDate() + 1)
+      resetTime.setHours(0, 0, 0, 0)
+      return {
+        canUseFeature: true,
+        remainingUsage,
+        dailyLimit,
+        resetTime,
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId }
     })
@@ -67,6 +81,11 @@ export class UsageTrackingService {
    * Increment usage count for a user
    */
   static async incrementUsage(userId: string, feature: 'reply' | 'ai_generation'): Promise<void> {
+    if (isNoDatabaseMode()) {
+      // No-op in no-database mode
+      return
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId }
     })
@@ -174,6 +193,20 @@ export class UsageTrackingService {
    * Check if user has access to premium features
    */
   static async hasPremiumAccess(userId: string, feature: 'advanced_ai' | 'custom_instructions' | 'priority_support'): Promise<boolean> {
+    if (isNoDatabaseMode()) {
+      // In no-DB mode, allow basic access but restrict advanced features
+      switch (feature) {
+        case 'advanced_ai':
+          return false
+        case 'custom_instructions':
+          return false
+        case 'priority_support':
+          return true
+        default:
+          return false
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId }
     })

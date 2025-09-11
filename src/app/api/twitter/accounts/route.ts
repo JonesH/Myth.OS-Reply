@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
-// Removed prisma and TwitterService imports - using demo mode only
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,19 +64,13 @@ export const dynamic = 'force-dynamic'
  *         description: Unauthorized
  */
 
-// Demo Twitter accounts data
+// Demo Twitter accounts data (used only when NO_DATABASE=true and credentials are missing)
 const DEMO_TWITTER_ACCOUNTS = [
   {
     id: 'twitter-account-1',
     twitterUsername: 'demo_account',
     isActive: true,
     createdAt: new Date().toISOString()
-  },
-  {
-    id: 'twitter-account-2', 
-    twitterUsername: 'mythos_demo',
-    isActive: true,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
   }
 ]
 
@@ -85,16 +79,41 @@ async function getAuthUser(request: NextRequest) {
   if (token) {
     return await AuthService.getUserFromToken(token)
   }
-  // Always return demo user in demo mode
+  // Always return demo user in no-DB mode
   return await AuthService.getOrCreateDemoUser()
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthUser(request)
+    // Prefer NextAuth session if configured (real Twitter Connect)
+    const { getToken } = await import('next-auth/jwt')
+    const jwt = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-    // Return demo Twitter accounts
-    return NextResponse.json(DEMO_TWITTER_ACCOUNTS)
+    const hasTwitterCreds = !!process.env.TWITTER_CLIENT_ID && !!process.env.TWITTER_CLIENT_SECRET
+
+    if (jwt && (jwt as any).twitterId) {
+      // Expose a virtual account based on the authenticated Twitter user
+      const username = (jwt as any).twitterId as string
+      return NextResponse.json([
+        {
+          id: 'twitter-session-account',
+          twitterUsername: username,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+        }
+      ])
+    }
+
+    // Fallback to legacy token-based auth if present
+    try { await getAuthUser(request) } catch {}
+
+    // If NO_DATABASE and missing credentials, return demo accounts
+    if (isNoDatabaseMode() && !hasTwitterCreds) {
+      return NextResponse.json(DEMO_TWITTER_ACCOUNTS)
+    }
+
+    // Otherwise, require NextAuth session (not logged in to Twitter)
+    return NextResponse.json({ error: 'Not connected to Twitter' }, { status: 401 })
     
   } catch (error: any) {
     return NextResponse.json(
@@ -106,19 +125,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthUser(request)
-    const body = await request.json()
-    const { twitterUsername } = body
-
-    // In demo mode, always succeed and return a new demo account
-    const newAccount = {
-      id: `twitter-account-${Date.now()}`,
-      twitterUsername: twitterUsername || 'new_demo_account',
-      isActive: true,
-      createdAt: new Date().toISOString()
-    }
-
-    return NextResponse.json(newAccount, { status: 201 })
+    // Real flow uses NextAuth Twitter; creating accounts manually is not supported.
+    return NextResponse.json({ error: 'Use /api/twitter/oauth or /auth/signin to connect Twitter' }, { status: 405 })
     
   } catch (error: any) {
     return NextResponse.json(
@@ -130,7 +138,6 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await getAuthUser(request)
     const { searchParams } = new URL(request.url)
     const accountId = searchParams.get('id')
 
@@ -141,22 +148,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // In demo mode, just return success
-    if (process.env.DEMO_MODE === 'true') {
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Twitter account disconnected successfully' 
-      })
-    }
-
-    // Delete the Twitter account from database
-    await prisma.twitterAccount.delete({
-      where: {
-        id: accountId,
-        userId: user.id // Ensure user can only delete their own accounts
-      }
-    })
-
+    // In session-based model, disconnecting is a no-op (user can sign out)
     return NextResponse.json({ 
       success: true, 
       message: 'Twitter account disconnected successfully' 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,17 +37,21 @@ export async function POST(request: NextRequest) {
   console.log('🔍 Twitter Post API - Starting request');
   
   try {
-    // Demo mode: simulate successful post without requiring auth
-    if (process.env.DEMO_MODE === 'true') {
+    // Determine if we have real Twitter OAuth credentials
+    const hasTwitterCreds = !!process.env.TWITTER_CLIENT_ID && !!process.env.TWITTER_CLIENT_SECRET
+
+    // If in NO_DATABASE mode but credentials exist, proceed with real NextAuth flow.
+    // Only simulate when NO_DATABASE=true AND credentials are missing.
+    if (isNoDatabaseMode() && !hasTwitterCreds) {
       const { text } = await request.json().catch(() => ({ text: undefined }));
       const content = typeof text === "string" && text.trim() ? text.trim() : "Test tweet from MythosReply (demo)";
-      console.log('🧪 Demo mode - simulating post:', content)
+      console.log('🧪 NO_DATABASE without Twitter creds - simulating post:', content)
       return NextResponse.json({
         success: true,
         data: { simulated: true, text: content },
         tweetId: '1234567890',
         tweetUrl: 'https://twitter.com/demo/status/1234567890',
-        message: 'Demo mode: tweet simulated (not posted).',
+        message: 'No DB and missing Twitter credentials: tweet simulated (not posted).',
         timestamp: new Date().toISOString(),
       })
     }

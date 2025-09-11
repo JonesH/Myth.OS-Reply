@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { existsSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
 import { initializeDatabase } from './db-init'
+import { isNoDatabaseMode } from './inMemoryStorage'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -47,13 +48,8 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   }
 })
 
-// Check if demo mode is enabled
-const isDemoMode = () => {
-  return process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
-}
-
-// Initialize database tables if they don't exist (only in production and not in demo mode)
-if (process.env.NODE_ENV === 'production' && !isDemoMode()) {
+// Initialize database tables if they don't exist (only when DB is enabled)
+if (process.env.NODE_ENV === 'production' && !isNoDatabaseMode()) {
   initializeDatabase(prisma).catch(console.error)
 }
 

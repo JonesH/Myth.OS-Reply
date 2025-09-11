@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,16 +31,18 @@ export async function GET(request: NextRequest) {
     const hasClientId = !!process.env.TWITTER_CLIENT_ID
     const hasClientSecret = !!process.env.TWITTER_CLIENT_SECRET
     const hasCredentials = hasClientId && hasClientSecret
-    const isDemoMode = process.env.TWITTER_OAUTH_DEMO_MODE === 'true'
+    const noDatabaseMode = isNoDatabaseMode()
     
     return NextResponse.json({
       hasCredentials,
-      isDemoMode,
+      noDatabaseMode,
+      // keep legacy key for backward-compat UIs
+      isDemoMode: noDatabaseMode,
       clientIdSet: hasClientId,
       clientSecretSet: hasClientSecret,
-      message: hasCredentials && !isDemoMode 
-        ? 'Twitter OAuth is configured for real accounts' 
-        : 'Twitter OAuth is in demo mode or missing credentials'
+      message: hasCredentials 
+        ? 'Twitter OAuth is configured for real accounts via NextAuth' 
+        : 'Twitter OAuth is missing credentials'
     })
   } catch (error) {
     console.error('Error checking Twitter OAuth config:', error)

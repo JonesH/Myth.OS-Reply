@@ -58,7 +58,7 @@ export const dynamic = 'force-dynamic'
 async function getAuthUser(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
   if (token) return await AuthService.getUserFromToken(token)
-  if (process.env.DEMO_MODE === 'true') return await AuthService.getOrCreateDemoUser()
+  if (isNoDatabaseMode()) return await AuthService.getOrCreateDemoUser()
   throw new Error('No token provided')
 }
 
