@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface UsageStats {
   currentPlan: string
@@ -18,10 +19,11 @@ interface UsageStats {
 export default function UsageStatsWidget() {
   const [stats, setStats] = useState<UsageStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription()
 
   useEffect(() => {
     fetchUsageStats()
-  }, [])
+  }, [subscriptionStatus]) // Refresh when subscription status changes
 
   const fetchUsageStats = async () => {
     try {
@@ -48,6 +50,7 @@ export default function UsageStatsWidget() {
       case 'free': return 'text-gray-600'
       case 'basic': return 'text-blue-600'
       case 'premium': return 'text-purple-600'
+      case 'enterprise': return 'text-green-600'
       default: return 'text-gray-600'
     }
   }
@@ -121,10 +124,10 @@ export default function UsageStatsWidget() {
         {stats.currentPlan === 'free' && (
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800 mb-2">
-              Upgrade to Basic (1 THETA) for 50 replies/day and advanced features!
+              Upgrade to Basic (90 THETA) for 50 replies/day and advanced features!
             </p>
             <a 
-              href="/subscription"
+              href="/payment"
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
               View Plans →
