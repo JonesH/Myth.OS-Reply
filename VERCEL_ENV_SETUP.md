@@ -4,24 +4,23 @@
 
 Set these in your Vercel Dashboard → Settings → Environment Variables:
 
-### 1. DATABASE_URL (Required)
-Use a managed Postgres instance (e.g., Neon, Supabase, Vercel Postgres):
+### 1. NO_DATABASE (Recommended for demo)
+Use a single switch to avoid any database usage:
 ```
-file:/tmp/prisma/dev.db
+NO_DATABASE=true
 ```
-**Note**: Use `/tmp/prisma/dev.db` for Vercel production (not `./prisma/dev.db`)
 
 ### 2. JWT_SECRET (Required)
 ```
 your-super-secret-jwt-key-here-make-it-long-and-random
 ```
 
-### 3. Demo Mode Variables (Required for deployment)
-Enable demo mode to run without database:
+### 3. DATABASE_URL (Only if NO_DATABASE=false)
+If you run with a database, configure a proper connection string. For SQLite on Vercel:
 ```
-DEMO_MODE=true
-NEXT_PUBLIC_DEMO_MODE=true
+file:/tmp/prisma/dev.db
 ```
+Note: Use `/tmp/prisma/dev.db` for Vercel production (not `./prisma/dev.db`).
 
 ### 5. NEXTAUTH_SECRET (Optional - for compatibility)
 ```
@@ -38,14 +37,13 @@ https://your-domain.vercel.app
 your-openrouter-api-key
 ```
 
-### 6. TWITTER_API_KEY (Required for Twitter features)
-```
-your-twitter-api-key
-```
-
-### 7. TWITTER_CLIENT_ID (Required for Twitter OAuth)
+### 6. TWITTER_CLIENT_ID (Required for Twitter OAuth)
 ```
 your-twitter-client-id
+```
+### 7. TWITTER_CLIENT_SECRET (Required for Twitter OAuth)
+```
+your-twitter-client-secret
 ```
 
 ## Steps to Set Environment Variables:
@@ -60,31 +58,28 @@ your-twitter-client-id
 
 ## Important Notes:
 
-- **Demo Mode** is recommended for deployment - no database setup required
-- **DATABASE_URL** must start with `file:` for SQLite (only needed if demo mode disabled)
-- **Use `/tmp/prisma/dev.db` for Vercel production** (not `./prisma/dev.db`)
-- **JWT_SECRET** must be set for authentication to work
-- **DEMO_MODE and NEXT_PUBLIC_DEMO_MODE** should both be set to `true` for deployment
-- All variables should be set for **Production** environment
-- After setting variables, redeploy your project
+- Set `NO_DATABASE=true` to run without any Prisma calls.
+- If `NO_DATABASE=false`, ensure `DATABASE_URL` is set correctly.
+- Use `/tmp/prisma/dev.db` for Vercel production (not `./prisma/dev.db`).
+- JWT_SECRET must be set for authentication to work.
+- All variables should be set for Production environment.
+- After setting variables, redeploy your project.
 
-## Demo Mode vs Database Mode
+## Modes
 
-**Demo Mode (Recommended for deployment):**
-- Set `DEMO_MODE=true` and `NEXT_PUBLIC_DEMO_MODE=true`
-- No database setup required
-- Uses in-memory demo data
-- Perfect for showcasing functionality
+**No-DB Mode (Recommended for demo):**
+- Set `NO_DATABASE=true`.
+- No database setup required; in-memory/demo data is used where needed.
+- Twitter OAuth via NextAuth remains real.
 
 **Database Mode (Development/Production with real data):**
-- Set `DEMO_MODE=false` or omit the variable
-- Requires proper DATABASE_URL configuration
-- Uses real database with Prisma
+- Set `NO_DATABASE=false`.
+- Requires proper `DATABASE_URL` configuration.
+- Uses real database with Prisma.
 
 ## Troubleshooting:
 
-If you still get DATABASE_URL errors:
-1. Make sure DATABASE_URL is set to `file:/tmp/prisma/dev.db` (not `./prisma/dev.db`)
-2. Check that the variable is set for **Production** environment
-3. Redeploy after setting the variable
-4. Check Vercel logs for any other missing variables
+If you still get DATABASE_URL errors with `NO_DATABASE=true`:
+1. Double-check that `NO_DATABASE` is set for Production.
+2. Redeploy after setting the variable.
+3. If running with a DB, ensure `DATABASE_URL` is set to `file:/tmp/prisma/dev.db` on Vercel.
