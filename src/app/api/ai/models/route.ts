@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { AIService } from '@/lib/services/ai'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/ai/models:

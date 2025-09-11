@@ -3,6 +3,8 @@ import { AuthService } from '@/lib/services/auth'
 import { TwitterOAuthService } from '@/lib/services/twitterOAuth'
 import { prisma } from '@/lib/database'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/twitter/oauth:

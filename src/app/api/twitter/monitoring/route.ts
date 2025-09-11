@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TwitterService } from '@/lib/services/twitter'
 import { TwitterAnalysisService } from '@/lib/services/twitterAnalysis'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/twitter/monitoring:

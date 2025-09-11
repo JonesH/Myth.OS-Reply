@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { UsageTrackingService } from '@/lib/services/usageTracking'
 import { AuthService } from '@/lib/services/auth'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/usage/stats:

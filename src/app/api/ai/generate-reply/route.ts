@@ -4,6 +4,8 @@ import { AIService } from '@/lib/services/ai'
 import { ReplyGenerationOptions } from '@/lib/services/openrouter'
 import { UsageTrackingService } from '@/lib/services/usageTracking'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/ai/generate-reply:

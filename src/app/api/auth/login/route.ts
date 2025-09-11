@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/auth/login:

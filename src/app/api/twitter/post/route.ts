@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+export const dynamic = 'force-dynamic'
+
 async function refreshAccessToken(refreshToken: string) {
   console.log('🔄 Refreshing Twitter access token...');
   const basic = Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`, "utf8").toString("base64");

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { KeywordGeneratorService } from "@/lib/services/keywordGenerator";
 import { TwitterIOService } from "@/lib/services/twitterIO";
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   console.log('🎯 Targeting API - Starting request');
   

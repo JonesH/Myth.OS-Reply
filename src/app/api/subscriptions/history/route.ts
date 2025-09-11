@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 import { AuthService } from '@/lib/services/auth'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/subscriptions/history:

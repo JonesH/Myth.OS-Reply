@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { TwitterIOService } from "@/lib/services/twitterIO";
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   console.log('🔍 Analytics Search API - Starting request');
   
