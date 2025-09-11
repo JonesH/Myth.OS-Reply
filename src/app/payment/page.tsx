@@ -90,47 +90,72 @@ export default function PaymentPlansPage() {
   }
 
   const generatePaymentAddress = async (plan: Plan) => {
-    console.log('🔄 Generating payment address for plan:', plan)
+    console.log('🔄 Updating subscription for plan:', plan)
     setGeneratingAddress(true)
     try {
       const token = localStorage.getItem('token')
       console.log('📝 Token exists:', !!token)
       
-      const response = await fetch('/api/payments/address', {
+      if (!token) {
+        alert('Please log in to select a plan')
+        return
+      }
+
+      // First, update the subscription immediately
+      const updateResponse = await fetch('/api/subscriptions/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          plan: plan.id,
-          amount: plan.isEnterprise ? enterpriseAmount : plan.price
+          plan: plan.id
         })
       })
 
-      console.log('📡 Response status:', response.status)
+      console.log('📡 Update response status:', updateResponse.status)
       
-      if (response.ok) {
-        const data = await response.json()
-        console.log('✅ Payment address generated:', data)
-        setPaymentAddress({
-          address: data.address,
-          amount: plan.price,
-          plan: plan.name
-        })
+      if (updateResponse.ok) {
+        console.log('✅ Subscription updated successfully')
+        
+        // For paid plans, also generate payment address
+        if (plan.id !== 'free') {
+          const paymentResponse = await fetch('/api/payments/address', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              plan: plan.id,
+              amount: plan.isEnterprise ? enterpriseAmount : plan.price
+            })
+          })
+
+          if (paymentResponse.ok) {
+            const paymentData = await paymentResponse.json()
+            console.log('✅ Payment address generated:', paymentData)
+            setPaymentAddress({
+              address: paymentData.address,
+              amount: plan.price,
+              plan: plan.name
+            })
+          }
+        }
+
         setSelectedPlan(plan)
-        alert(`✅ ${plan.name} plan selected! Payment address generated successfully.`)
+        alert(`✅ ${plan.name} plan activated successfully!`)
         
         // Refresh subscription status across the app
         await refreshSubscriptionStatus()
       } else {
-        const error = await response.json()
-        console.error('❌ Error response:', error)
+        const error = await updateResponse.json()
+        console.error('❌ Error updating subscription:', error)
         alert(`Error: ${error.error}`)
       }
     } catch (error) {
-      console.error('❌ Error generating payment address:', error)
-      alert('Error generating payment address')
+      console.error('❌ Error updating subscription:', error)
+      alert('Error updating subscription')
     } finally {
       setGeneratingAddress(false)
     }
@@ -382,10 +407,10 @@ export default function PaymentPlansPage() {
               {plan.id === 'free' 
                 ? 'Current Plan' 
                 : selectedPlan?.id === plan.id 
-                ? 'Selected'  
+                ? 'Activated'  
                 : generatingAddress 
-                ? 'Generating...' 
-                : 'Select Plan'}
+                ? 'Activating...' 
+                : 'Activate Plan'}
             </button>
           </div>
         ))}
