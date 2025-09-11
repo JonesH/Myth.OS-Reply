@@ -1,30 +1,20 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function SignInPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Redirect to dashboard immediately since demo mode doesn't require auth
-    router.push("/dashboard");
-  }, [router]);
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Redirecting to Dashboard...
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Taking you to the MythosReply dashboard
-          </p>
-          <div className="mt-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <h1 className="text-2xl font-bold">Sign in</h1>
+        <p>Connect your X (Twitter) account to continue.</p>
+        <button
+          onClick={() => signIn('twitter', { callbackUrl: '/app' })}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+        >
+          Sign in with X (Twitter)
+        </button>
       </div>
     </div>
   );
 }
+
