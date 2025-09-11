@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 import { AuthService } from '@/lib/services/auth'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
     const user = token
       ? await AuthService.validateToken(token)
-      : (process.env.DEMO_MODE === 'true' ? await AuthService.getOrCreateDemoUser() : null)
+      : await AuthService.getOrCreateDemoUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -81,30 +82,32 @@ export async function POST(request: NextRequest) {
     const endDate = new Date()
     endDate.setDate(endDate.getDate() + 30)
 
-    // Update user subscription
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        subscriptionPlan: plan,
-        subscriptionStatus: 'active',
-        subscriptionExpiresAt: endDate,
-        dailyReplyLimit: plan === 'basic' ? 50 : 500,
-        walletAddress: walletAddress || undefined
-      }
-    })
+    if (!isNoDatabaseMode()) {
+      // Update user subscription
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          subscriptionPlan: plan,
+          subscriptionStatus: 'active',
+          subscriptionExpiresAt: endDate,
+          dailyReplyLimit: plan === 'basic' ? 50 : 500,
+          walletAddress: walletAddress || undefined
+        }
+      })
 
-    // Create subscription record
-    await prisma.subscription.create({
-      data: {
-        userId: user.id,
-        plan,
-        status: 'active',
-        amount,
-        transactionHash,
-        endDate,
-        autoRenew: true
-      }
-    })
+      // Create subscription record
+      await prisma.subscription.create({
+        data: {
+          userId: user.id,
+          plan,
+          status: 'active',
+          amount,
+          transactionHash,
+          endDate,
+          autoRenew: true
+        }
+      })
+    }
 
     return NextResponse.json({
       success: true,

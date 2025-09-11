@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { prisma } from '@/lib/database'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
     const user = token
       ? await AuthService.validateToken(token)
-      : (process.env.DEMO_MODE === 'true' ? await AuthService.getOrCreateDemoUser() : null)
+      : await AuthService.getOrCreateDemoUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -98,17 +99,19 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + 24)
 
-    // Store payment address in database for tracking
-    await prisma.paymentAddress.create({
-      data: {
-        userId: user.id,
-        address: paymentAddress,
-        plan,
-        amount,
-        expiresAt,
-        status: 'pending'
-      }
-    })
+    if (!isNoDatabaseMode()) {
+      // Store payment address in database for tracking
+      await prisma.paymentAddress.create({
+        data: {
+          userId: user.id,
+          address: paymentAddress,
+          plan,
+          amount,
+          expiresAt,
+          status: 'pending'
+        }
+      })
+    }
 
     return NextResponse.json({
       address: paymentAddress,

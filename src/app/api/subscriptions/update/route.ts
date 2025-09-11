@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 import { AuthService } from '@/lib/services/auth'
 import { ensureUserExists } from '@/lib/utils/ensureUser'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
     const user = token
       ? await AuthService.validateToken(token)
-      : (process.env.DEMO_MODE === 'true' ? await AuthService.getOrCreateDemoUser() : null)
+      : await AuthService.getOrCreateDemoUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -100,7 +101,20 @@ export async function POST(request: NextRequest) {
 
     const dailyLimit = dailyLimits[plan as keyof typeof dailyLimits]
 
-    // Ensure user exists in database (for demo mode)
+    if (isNoDatabaseMode()) {
+      return NextResponse.json({
+        success: true,
+        message: `Successfully updated to ${plan} plan (no-DB mode)`,
+        subscription: {
+          plan,
+          status: 'active',
+          expiresAt: endDate?.toISOString() || null,
+          dailyLimit
+        }
+      })
+    }
+
+    // Ensure user exists in database
     await ensureUserExists(user)
 
     // Update user subscription

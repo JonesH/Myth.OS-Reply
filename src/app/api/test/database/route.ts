@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
-
-// Check if demo mode is enabled
-const isDemoMode = () => {
-  return process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
-}
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export async function GET(request: NextRequest) {
-  // In demo mode, return mock data
-  if (isDemoMode()) {
+  // In no-database mode, return mock data
+  if (isNoDatabaseMode()) {
     return NextResponse.json({
       success: true,
-      message: 'Demo mode - Database test successful (simulated)',
+      message: 'NO_DATABASE mode - Database test successful (simulated)',
       userCount: 2,
       demoMode: true,
       databaseUrl: 'Demo mode - no database required',

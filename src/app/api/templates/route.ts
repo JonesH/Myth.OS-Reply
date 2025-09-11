@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { prisma } from '@/lib/database'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,6 +89,34 @@ async function getAuthUser(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    if (isNoDatabaseMode()) {
+      // Return a curated set of default templates in no-DB mode
+      const defaults = [
+        {
+          id: 't1',
+          name: 'Supportive Response',
+          description: 'Encouraging reply for achievements or launches',
+          category: 'support',
+          template: '{{symbol.celebrate}} Congratulations on {{achievement}}! {{symbol.fire}} What\'s next on your roadmap?',
+          variables: ['achievement'],
+          symbols: { celebrate: '🎉', fire: '🔥', heart: '❤️' },
+          tone: 'supportive',
+          usageCount: 0,
+        },
+        {
+          id: 't2',
+          name: 'Professional Question',
+          description: 'Professional follow-up question',
+          category: 'question',
+          template: 'Interesting perspective on {{topic}}. {{symbol.thinking}} How do you see this evolving in the next {{timeframe}}?',
+          variables: ['topic', 'timeframe'],
+          symbols: { thinking: '🤔', chart: '📊', bulb: '💡' },
+          tone: 'professional',
+          usageCount: 0,
+        }
+      ]
+      return NextResponse.json(defaults)
+    }
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const tone = searchParams.get('tone')
@@ -135,6 +164,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isNoDatabaseMode()) {
+      const body = await request.json()
+      return NextResponse.json({ ...body, id: `tpl_${Date.now()}` }, { status: 201 })
+    }
     const user = await getAuthUser(request)
     
     // Check admin access

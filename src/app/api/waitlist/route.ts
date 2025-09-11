@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { prisma } from '@/lib/database'
 import { z } from 'zod'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,6 +106,15 @@ async function getAuthUser(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isNoDatabaseMode()) {
+      // Accept waitlist entries without persistence
+      return NextResponse.json({
+        message: 'Successfully joined the waitlist (no-DB mode)',
+        position: 1,
+        estimatedWait: '1-2 weeks',
+        priority: 'normal'
+      }, { status: 201 })
+    }
     const body = await request.json()
     
     // Validate input
@@ -222,6 +232,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    if (isNoDatabaseMode()) {
+      return NextResponse.json({
+        entries: [],
+        statistics: {
+          total: 0,
+          byStatus: {},
+          byPriority: {},
+          growth: { dailySignups: 0, weeklySignups: 0 }
+        }
+      })
+    }
     // Verify admin access (you can customize this logic)
     const user = await getAuthUser(request)
     
@@ -341,6 +362,11 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    if (isNoDatabaseMode()) {
+      return NextResponse.json({
+        message: 'Waitlist entry updated successfully (no-DB mode)',
+      })
+    }
     // Admin-only endpoint to update waitlist entries
     const user = await getAuthUser(request)
     const isAdmin = user.email.includes('admin') || 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 import { AuthService } from '@/lib/services/auth'
 import { ensureUserExists } from '@/lib/utils/ensureUser'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +59,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Ensure user exists in database (for demo mode)
+    // In no-DB mode, return a virtual subscription
+    if (isNoDatabaseMode()) {
+      const subscriptionData = {
+        plan: 'free',
+        status: 'active',
+        expiresAt: null,
+        dailyLimit: 10,
+        repliesUsedToday: 0,
+        daysUntilExpiry: null,
+        canUpgrade: true,
+        walletAddress: '0xNO_DB_MODE',
+      }
+      return NextResponse.json(subscriptionData)
+    }
+
+    // Ensure user exists in database
     await ensureUserExists(user)
 
     // Get user data from database

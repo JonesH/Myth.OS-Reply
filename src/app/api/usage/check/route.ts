@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UsageTrackingService } from '@/lib/services/usageTracking'
 import { AuthService } from '@/lib/services/auth'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
     const user = token
       ? await AuthService.validateToken(token)
-      : (process.env.DEMO_MODE === 'true' ? await AuthService.getOrCreateDemoUser() : null)
+      : (isNoDatabaseMode() ? await AuthService.getOrCreateDemoUser() : null)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
     const user = token
       ? await AuthService.validateToken(token)
-      : (process.env.DEMO_MODE === 'true' ? await AuthService.getOrCreateDemoUser() : null)
+      : (isNoDatabaseMode() ? await AuthService.getOrCreateDemoUser() : null)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

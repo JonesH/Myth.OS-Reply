@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/lib/services/auth'
 import { prisma } from '@/lib/database'
+import { isNoDatabaseMode } from '@/lib/inMemoryStorage'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,13 +93,17 @@ export const dynamic = 'force-dynamic'
 async function getAuthUser(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
   if (token) return await AuthService.getUserFromToken(token)
-  if (process.env.DEMO_MODE === 'true') return await AuthService.getOrCreateDemoUser()
+  if (isNoDatabaseMode()) return await AuthService.getOrCreateDemoUser()
   throw new Error('No token provided')
 }
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
+
+    if (isNoDatabaseMode()) {
+      return NextResponse.json([])
+    }
 
     const replyJobs = await prisma.replyJob.findMany({
       where: { userId: user.id },
@@ -175,6 +180,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the Twitter account belongs to the user
+    if (isNoDatabaseMode()) {
+      return NextResponse.json({
+        id: `demo-job-${Date.now()}`,
+        userId: user.id,
+        twitterAccountId: twitterAccountId,
+        targetTweetId,
+        targetUsername: finalTargetUsernames.length === 1 ? finalTargetUsernames[0] : null,
+        targetUsernames: JSON.stringify(finalTargetUsernames),
+        keywords: JSON.stringify(keywords),
+        replyText,
+        maxReplies,
+        isActive: true,
+        currentReplies: 0,
+        createdAt: new Date().toISOString(),
+        twitterAccount: { twitterUsername: 'demo_account' }
+      }, { status: 201 })
+    }
+
     const twitterAccount = await prisma.twitterAccount.findFirst({
       where: {
         id: twitterAccountId,
