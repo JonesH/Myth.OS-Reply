@@ -1,13 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  env: {
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-  },
-  experimental: {
-    outputFileTracingRoot: undefined,
-  }
+  // NextAuth removed - using custom JWT authentication
 }
 
 module.exports = nextConfig

@@ -42,6 +42,10 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+
+# User directories (not part of the project)
+faisal/
 
 # Vercel
 .vercel
