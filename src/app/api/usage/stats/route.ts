@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UsageTrackingService } from '@/lib/services/usageTracking'
 import { AuthService } from '@/lib/services/auth'
+import { ensureUserExists } from '@/lib/utils/ensureUser'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +65,9 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Ensure user exists in database (for demo mode)
+    await ensureUserExists(user)
 
     const { searchParams } = new URL(request.url)
     const days = parseInt(searchParams.get('days') || '30')

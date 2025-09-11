@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/database'
 import { AuthService } from '@/lib/services/auth'
+import { ensureUserExists } from '@/lib/utils/ensureUser'
 
 export const dynamic = 'force-dynamic'
 
@@ -98,6 +99,9 @@ export async function POST(request: NextRequest) {
     }
 
     const dailyLimit = dailyLimits[plan as keyof typeof dailyLimits]
+
+    // Ensure user exists in database (for demo mode)
+    await ensureUserExists(user)
 
     // Update user subscription
     await prisma.user.update({
