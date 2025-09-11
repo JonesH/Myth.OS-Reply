@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { existsSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
-import { execSync } from 'child_process'
+import { initializeDatabase } from './db-init'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -18,7 +18,7 @@ const getDatabaseUrl = () => {
   }
 }
 
-// Ensure database directory exists and run migrations
+// Ensure database directory exists
 const ensureDatabaseDirectory = () => {
   const dbUrl = getDatabaseUrl()
   if (dbUrl.startsWith('file:')) {
@@ -31,23 +31,6 @@ const ensureDatabaseDirectory = () => {
         console.log(`✅ Created database directory: ${dbDir}`)
       } catch (error) {
         console.error(`❌ Failed to create database directory: ${dbDir}`, error)
-      }
-    }
-    
-    // In production, run migrations if database doesn't exist
-    if (process.env.NODE_ENV === 'production' && !existsSync(dbPath)) {
-      try {
-        console.log('🔄 Running migrations in production...')
-        execSync('npx prisma migrate deploy', {
-          env: {
-            ...process.env,
-            DATABASE_URL: dbUrl
-          },
-          stdio: 'inherit'
-        })
-        console.log('✅ Migrations completed successfully')
-      } catch (error) {
-        console.error('❌ Migration failed:', error)
       }
     }
   }
@@ -63,5 +46,10 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     }
   }
 })
+
+// Initialize database tables if they don't exist (only in production)
+if (process.env.NODE_ENV === 'production') {
+  initializeDatabase(prisma).catch(console.error)
+}
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
