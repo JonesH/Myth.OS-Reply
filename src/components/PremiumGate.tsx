@@ -45,7 +45,7 @@ export default function PremiumGate({
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     checkSubscriptionStatus()

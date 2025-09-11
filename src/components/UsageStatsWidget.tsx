@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface UsageStats {
@@ -21,11 +21,7 @@ export default function UsageStatsWidget() {
   const [loading, setLoading] = useState(true)
   const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription()
 
-  useEffect(() => {
-    fetchUsageStats()
-  }, [subscriptionStatus]) // Refresh when subscription status changes
-
-  const fetchUsageStats = async () => {
+  const fetchUsageStats = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) return
@@ -49,7 +45,11 @@ export default function UsageStatsWidget() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [subscriptionStatus])
+
+  useEffect(() => {
+    fetchUsageStats()
+  }, [fetchUsageStats])
 
   const getPlanColor = (plan: string) => {
     switch (plan) {

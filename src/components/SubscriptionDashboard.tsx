@@ -79,7 +79,7 @@ export default function SubscriptionDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     fetchSubscriptionData()
