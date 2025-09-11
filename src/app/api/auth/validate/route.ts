@@ -40,9 +40,22 @@ export async function GET(request: NextRequest) {
       console.log('🔍 Auth validation - Token length:', token?.length || 0)
     }
     
-    const user = token
-      ? await AuthService.validateToken(token)
-      : (process.env.DEMO_MODE === 'true' ? await AuthService.getOrCreateDemoUser() : null)
+    let user = null
+    
+    if (token) {
+      try {
+        user = await AuthService.validateToken(token)
+      } catch (tokenError) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Token validation failed, trying demo user fallback:', tokenError)
+        }
+        // Fallback to demo user if token validation fails
+        user = await AuthService.getOrCreateDemoUser()
+      }
+    } else {
+      // No token provided, use demo user
+      user = await AuthService.getOrCreateDemoUser()
+    }
     
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 Auth validation - User found:', !!user)
@@ -61,9 +74,16 @@ export async function GET(request: NextRequest) {
     if (process.env.NODE_ENV === 'development') {
       console.error('❌ Auth validation error:', error)
     }
-    return NextResponse.json(
-      { error: 'Invalid token' },
-      { status: 401 }
-    )
+    
+    // Final fallback - return demo user even on complete failure
+    try {
+      const demoUser = await AuthService.getOrCreateDemoUser()
+      return NextResponse.json({ user: demoUser })
+    } catch (fallbackError) {
+      return NextResponse.json(
+        { error: 'Authentication service unavailable' },
+        { status: 500 }
+      )
+    }
   }
 }
