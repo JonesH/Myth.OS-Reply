@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import TwitterConnectButton from "@/components/TwitterConnectButton";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
@@ -15,6 +15,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription();
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   
   console.log('🔍 Navbar - User:', user);
   console.log('📍 User ID:', user?.id);
@@ -47,6 +48,24 @@ export default function Navbar() {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Handle click outside mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        console.log('🖱️ Clicked outside mobile menu, closing...')
+        setMobileMenuOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -151,8 +170,12 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <div className="lg:hidden flex items-center">
             <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 rounded-md hover:bg-gray-100"
+              onClick={() => {
+                console.log('🍔 Mobile menu button clicked, current state:', mobileMenuOpen)
+                setMobileMenuOpen(!mobileMenuOpen)
+              }}
+              className="p-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Toggle mobile menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
@@ -167,35 +190,57 @@ export default function Navbar() {
 
         {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white/98 backdrop-blur-sm border-t border-gray-200/60 shadow-lg">
+          <div 
+            ref={mobileMenuRef}
+            className="lg:hidden bg-white/98 backdrop-blur-sm border-t border-gray-200/60 shadow-lg animate-in slide-in-from-top-2 duration-200"
+          >
             <div className="px-4 py-6 space-y-4">
+              {/* Debug info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                  Mobile menu open: {mobileMenuOpen.toString()}, User: {user ? user.email : 'null'}
+                </div>
+              )}
+              
               {/* Mobile Navigation Links */}
               <div className="space-y-3">
                 <Link 
                   href="/docs" 
-                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
-                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2 px-2 rounded-md hover:bg-gray-50"
+                  onClick={() => {
+                    console.log('📱 Mobile nav link clicked: /docs')
+                    setMobileMenuOpen(false)
+                  }}
                 >
                   Documentation
                 </Link>
                 <Link 
                   href="/waitlist" 
-                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
-                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2 px-2 rounded-md hover:bg-gray-50"
+                  onClick={() => {
+                    console.log('📱 Mobile nav link clicked: /waitlist')
+                    setMobileMenuOpen(false)
+                  }}
                 >
                   Waitlist
                 </Link>
                 <Link 
                   href="/dashboard" 
-                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
-                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2 px-2 rounded-md hover:bg-gray-50"
+                  onClick={() => {
+                    console.log('📱 Mobile nav link clicked: /dashboard')
+                    setMobileMenuOpen(false)
+                  }}
                 >
                   Dashboard
                 </Link>
                 <Link 
                   href="/subscription" 
-                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2"
-                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium text-sm py-2 px-2 rounded-md hover:bg-gray-50"
+                  onClick={() => {
+                    console.log('📱 Mobile nav link clicked: /subscription')
+                    setMobileMenuOpen(false)
+                  }}
                 >
                   Subscription
                 </Link>
@@ -237,10 +282,11 @@ export default function Navbar() {
                     </TwitterConnectButton>
                     <button
                       onClick={() => {
+                        console.log('📱 Mobile logout clicked')
                         handleLogout();
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center py-2 px-4 rounded-lg hover:bg-gray-100"
+                      className="w-full text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center py-2 px-4 rounded-lg hover:bg-gray-100 border border-gray-200"
                     >
                       Logout
                     </button>
@@ -249,8 +295,11 @@ export default function Navbar() {
                   <div className="space-y-3">
                     <Link
                       href="/auth/login"
-                      className="block text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center py-2 px-4 rounded-lg hover:bg-gray-100"
-                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors duration-200 text-center py-2 px-4 rounded-lg hover:bg-gray-100 border border-gray-200"
+                      onClick={() => {
+                        console.log('📱 Mobile sign in clicked')
+                        setMobileMenuOpen(false)
+                      }}
                     >
                       Sign In
                     </Link>
