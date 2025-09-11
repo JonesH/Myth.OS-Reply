@@ -11,12 +11,13 @@ export async function ensureUserExists(user: AuthUser) {
   })
 
   if (!existingUser) {
-    // Create user in database
+    // Create user in database with a default password hash
     await prisma.user.create({
       data: {
         id: user.id,
         email: user.email,
         username: user.username,
+        password: '$2a$12$demo.hash.for.demo.mode.only', // Default demo password hash
         subscriptionPlan: 'free',
         subscriptionStatus: 'active',
         dailyReplyLimit: 10,
