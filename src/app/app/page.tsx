@@ -18,22 +18,19 @@ export default function AppPage() {
   const [analysisResults, setAnalysisResults] = useState<any>(null);
 
   // Mock session for now - NextAuth disabled
-  const session = null;
-  const status = "unauthenticated";
+  const session: any = null;
+  const status = "unauthenticated" as "loading" | "authenticated" | "unauthenticated";
 
   // Add comprehensive logging
   console.log('🔍 App Page - Session status:', status);
   console.log('📍 App Page - Full session:', session);
-  console.log('🎯 App Page - Twitter ID:', session?.user?.twitterId);
-  console.log('📝 App Page - Username:', session?.user?.username);
-  console.log('👤 App Page - User ID:', session?.user?.id);
 
   const postTweet = async () => {
     if (!tweetText.trim()) return;
     
     console.log('🚀 Starting tweet post process...');
     console.log('📝 Tweet text:', tweetText);
-    console.log('👤 Current user Twitter ID:', session?.user?.twitterId);
+    console.log('👤 Current user Twitter ID:', null); // session disabled
     
     setIsPosting(true);
     setMessage("");
@@ -185,7 +182,7 @@ export default function AppPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Account Status Card */}
-        {session.user.twitterId && (
+        {false && ( // session disabled
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -198,13 +195,13 @@ export default function AppPage() {
                   <h2 className="text-lg font-semibold text-gray-900">X Account Connected</h2>
                   <div className="flex items-center space-x-2">
                     <p className="text-2xl font-bold text-blue-600">
-                      @{session.user.username || session.user.twitterId}
+                      @{session?.user?.username || session?.user?.twitterId || 'N/A'}
                     </p>
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <span>Display Name: {session.user.name || 'Not available'}</span>
-                    <span>User ID: {session.user.id}</span>
+                    <span>Display Name: {session?.user?.name || 'Not available'}</span>
+                    <span>User ID: {session?.user?.id || 'N/A'}</span>
                   </div>
                   <p className="text-sm text-green-600 font-medium mt-1">✅ Ready for posting and analytics</p>
                 </div>
@@ -383,11 +380,11 @@ export default function AppPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Tweet</h3>
-              {session.user.twitterId ? (
+              {false ? ( // session disabled
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="tweet" className="block text-sm font-medium text-gray-700 mb-2">
-                      Post as @{session.user.username || session.user.twitterId}
+                      Post as @{session?.user?.username || session?.user?.twitterId || 'N/A'}
                     </label>
                     <textarea
                       id="tweet"
@@ -435,7 +432,7 @@ export default function AppPage() {
                           {lastTweetUrl && (
                             <div className="mt-3">
                               <a 
-                                href={lastTweetUrl} 
+                                href={lastTweetUrl || '#'} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"

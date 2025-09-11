@@ -1,14 +1,6 @@
 {
   "buildCommand": "prisma migrate deploy && prisma generate && next build",
-  "devCommand": "next dev",
-  "installCommand": "npm install",
   "env": {
     "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK": "1"
-  },
-  "rewrites": [
-    {
-      "source": "/api/docs",
-      "destination": "/api/docs"
-    }
-  ]
+  }
 }
