@@ -3,6 +3,8 @@ import { AuthService } from '@/lib/services/auth'
 import { prisma } from '@/lib/database'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/waitlist:
