@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-// Removed prisma import - using demo mode only
+import { prisma } from '@/lib/database'
 import { AuthService } from '@/lib/services/auth'
+import { ensureUserExists } from '@/lib/utils/ensureUser'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,24 +43,13 @@ export const dynamic = 'force-dynamic'
  *       500:
  *         description: Internal server error
  */
-// Demo subscription data
-const DEMO_SUBSCRIPTION_DATA = {
-  plan: 'premium',
-  status: 'active',
-  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-  dailyLimit: 500,
-  repliesUsedToday: 47,
-  daysUntilExpiry: 30,
-  canUpgrade: false,
-  walletAddress: '0x1234...demo'
-}
 
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined
     
-    // Always return demo user in demo mode
+    // Get user from token
     const user = token 
       ? await AuthService.validateToken(token)
       : await AuthService.getOrCreateDemoUser()
@@ -68,8 +58,45 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Return demo subscription data
-    return NextResponse.json(DEMO_SUBSCRIPTION_DATA)
+    // Ensure user exists in database (for demo mode)
+    await ensureUserExists(user)
+
+    // Get user data from database
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        subscriptionPlan: true,
+        subscriptionStatus: true,
+        subscriptionExpiresAt: true,
+        dailyReplyLimit: true,
+        repliesUsedToday: true
+      }
+    })
+
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Calculate days until expiry
+    const daysUntilExpiry = userData.subscriptionExpiresAt 
+      ? Math.ceil((new Date(userData.subscriptionExpiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+      : null
+
+    // Determine if user can upgrade
+    const canUpgrade = userData.subscriptionPlan === 'free' || userData.subscriptionPlan === 'basic'
+
+    const subscriptionData = {
+      plan: userData.subscriptionPlan,
+      status: userData.subscriptionStatus,
+      expiresAt: userData.subscriptionExpiresAt?.toISOString() || null,
+      dailyLimit: userData.dailyReplyLimit,
+      repliesUsedToday: userData.repliesUsedToday,
+      daysUntilExpiry,
+      canUpgrade,
+      walletAddress: '0x1234...demo' // TODO: Get real wallet address
+    }
+
+    return NextResponse.json(subscriptionData)
     
   } catch (error) {
     console.error('Error fetching subscription status:', error)
